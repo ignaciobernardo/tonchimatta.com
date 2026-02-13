@@ -1065,75 +1065,66 @@
 
 const NOTES_DATA = [
   {
-    id: "about-me", emoji: "📌", title: "about me", date: "2/13/2026",
-    preview: "my name is alana (rhymes with...",
+    id: "about-me", emoji: "📌", title: "about tonchi", date: "2/13/2026",
+    preview: "Trinidad (Tonchi) Matta — espacio privado...",
     section: "pinned", dateLabel: "February 13, 2026 at 8:00 AM",
-    content: `<h1>📌 about me</h1>
-<p>my name is alana (rhymes with "banana")</p>
-<h2>currently</h2>
+    content: `<h1>📌 about tonchimatta.com</h1>
+<p>Este escritorio es el espacio privado de <strong>Trinidad (“Tonchi”) Matta</strong>.</p>
+<p>Aquí vive su portafolio personal: notas, fotos, mensajes y pequeños easter eggs pensados solo para ella.</p>
+<h2>quién es tonchi</h2>
 <ul>
-  <li>founder &amp; managing partner of <a href="#">basecase capital</a></li>
-  <li>partner to a number of incredible companies, including <a href="#">ashby</a>, <a href="#">astral</a>, <a href="#">baseten</a>, <a href="#">braintrust</a>, <a href="#">browserbase</a>, <a href="#">default</a>, <a href="#">graphite</a>, <a href="#">orb</a>, <a href="#">paper</a>, <a href="#">resend</a>, <a href="#">supabase</a>, <a href="#">vercel</a>, <a href="#">windsurf</a> &amp; others</li>
-  <li>builder &amp; maintainer of a few open-source projects, including <a href="#">ghostbusters</a>, <a href="#">lexiconic</a>, <a href="#">booklist</a>, &amp; <a href="#">others</a></li>
-  <li>wife &amp; partner in crime to <a href="#">ankur goyal</a></li>
+  <li>curiosa, intensa y muy creativa</li>
+  <li>amante de los detalles y de las pequeñas sorpresas</li>
+  <li>fan de los recuerdos en fotos, las playlists largas y las conversaciones que se quedan dando vueltas en la cabeza</li>
 </ul>
-<h2>previously</h2>
+<h2>sobre este espacio</h2>
 <ul>
-  <li>joined <a href="#">samsara</a> as a product manager in 2019</li>
-  <li>worked on data platform, reports infra, alerts &amp; automations, &amp; admin tooling with some <a href="#">very incredible engineers</a></li>
-  <li>interned at <a href="#">greylock</a> and was lucky enough to help out with their incubation of <a href="#">abnormal security</a></li>
-  <li>launched the <a href="#">home equity platform at blend</a></li>
-  <li>shipped the first <a href="#">free trial at appdynamics</a></li>
-  <li>interned on the research &amp; development team at <a href="#">natera</a></li>
-  <li>studied computer science at <a href="#">columbia university</a> and made some <a href="#">life long friends</a></li>
+  <li>no es una red social ni un cv; es un escritorio íntimo</li>
+  <li>las apps (Notes, Messages, Photos, FaceTime, Contacts, Finder) cuentan distintas partes de su mundo</li>
+  <li>está pensado para explorarse con calma, como si abrieras su Mac real</li>
 </ul>`
   },
   {
-    id: "quick-links", emoji: "🔗", title: "quick links", date: "2/13/2026",
-    preview: "email inbox zero, i respond to eve...",
+    id: "quick-links", emoji: "🔗", title: "tonchi links", date: "2/13/2026",
+    preview: "lugares para encontrar a Trinidad Matta...",
     section: "pinned", dateLabel: "February 13, 2026 at 9:00 AM",
-    content: `<h1>🔗 quick links</h1>
-<p>email inbox zero, i respond to every email</p>
-<h2>connect</h2>
+    content: `<h1>🔗 tonchi links</h1>
+<p>Algunos lugares donde vive la energía de Trinidad Matta.</p>
+<h2>para conectar</h2>
 <ul>
-  <li><a href="#">email</a> - the best way to reach me</li>
-  <li><a href="#">twitter / x</a> - where i share thoughts</li>
-  <li><a href="#">linkedin</a> - professional profile</li>
-  <li><a href="#">github</a> - open source projects</li>
+  <li><a href="#">email</a> — el canal más directo</li>
+  <li><a href="#">instagram</a> — fotos, momentos y cosas bonitas</li>
+  <li><a href="#">spotify</a> — playlists que cuentan historias</li>
+  <li><a href="#">linkedin</a> — la versión más “seria” de tonchi</li>
 </ul>
-<h2>writing</h2>
+<h2>para explorar más</h2>
 <ul>
-  <li><a href="#">blog</a> - long form essays</li>
-  <li><a href="#">newsletter</a> - monthly updates</li>
+  <li><a href="#">notas públicas</a> — ideas y reflexiones</li>
+  <li><a href="#">proyectos</a> — cosas en las que está trabajando o sueña hacer</li>
 </ul>`
   },
   {
-    id: "how-this-works", emoji: "⚙️", title: "how this works", date: "11/22/2025",
-    preview: "implementation the app uses the...",
+    id: "how-this-works", emoji: "⚙️", title: "how this desktop works", date: "11/22/2025",
+    preview: "un mac de mentira hecho solo para tonchi...",
     section: "pinned", dateLabel: "November 22, 2025 at 3:26 PM",
-    content: `<h1>⚙️ how this works</h1>
-<h2>implementation</h2>
+    content: `<h1>⚙️ how this desktop works</h1>
+<h2>qué es</h2>
 <ul>
-  <li>the app uses the <a href="#">next.js</a> app router and is hosted on <a href="#">vercel</a></li>
-  <li>the notes and note metadata are stored in <a href="#">supabase</a></li>
-  <li>the notes are <a href="#">statically generated</a> and get revalidated when new notes are created or updated</li>
-  <li>the note content is stored in markdown and rendered with <a href="#">react markdown</a></li>
-  <li><a href="#">supabase rls</a> policies are set up so that anyone can view public notes and create private notes</li>
-  <li>new private notes get stored in supabase with a session_id based on local storage</li>
-  <li>users can view, edit, &amp; delete their own private notes and share the link with others to view</li>
-  <li>a <a href="#">pg_cron</a> job runs every day to delete empty notes that are over 12 hours old</li>
-  <li>the swipe gestures to pin/unpin, edit, &amp; delete notes on mobile are implemented with <a href="#">react swipeable</a></li>
-  <li>the keyboard shortcuts are inspired by vim and the command menu uses <a href="#">shadcn/ui command</a></li>
-  <li>the og images are <a href="#">generated dynamically</a> with the note's title &amp; emoji</li>
-  <li>it's fully open-source and available on <a href="#">github</a>, so feel free to fork it or submit a pull request!</li>
+  <li>una sola página web que imita el escritorio de macOS</li>
+  <li>cada ventana (Notes, Messages, Photos, FaceTime, Contacts, Finder) es una app falsa pero interactiva</li>
+  <li>todo el contenido vive en archivos estáticos: html, css, javascript y fotos locales</li>
 </ul>
-<h2>gratitude</h2>
+<h2>cómo está construido</h2>
 <ul>
-  <li><a href="#">john pham</a> for tons of feedback on speed &amp; accessibility</li>
-  <li><a href="#">eden halperin</a> for incredible feedback on ui/ux</li>
-  <li><a href="#">guillermo rauch</a> &amp; <a href="#">grace yun</a> for help with the og image</li>
-  <li><a href="#">andrew smith</a> &amp; <a href="#">terry sutton</a> for help with supabase ssr</li>
-  <li><a href="#">david lorenz</a> for help with supabase rls</li>
+  <li>sin base de datos, sin login, sin backend: solo frontend</li>
+  <li>las notas, mensajes, contactos y fotos están definidas como datos en <code>index.html</code> y <code>photos_data.js</code></li>
+  <li>una ventana puede abrir otra (por ejemplo, Contacts abre Messages o FaceTime para cada persona)</li>
+  <li>el escritorio está pensado para correr incluso desde <code>file://</code>, sin servidor</li>
+</ul>
+<h2>para qué existe</h2>
+<ul>
+  <li>para que Trinidad tenga un lugar propio en tonchimatta.com</li>
+  <li>para guardar recuerdos, detalles y pequeños mensajes en una interfaz que se siente familiar</li>
 </ul>`
   },
   {

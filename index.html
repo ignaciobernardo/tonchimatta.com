@@ -1,0 +1,2439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mi Portafolio</title>
+  <style>
+    /* ===== Reset & Base ===== */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --menubar-h: 25px;
+      --titlebar-h: 28px;
+      --dock-icon: 50px;
+      --radius-window: 10px;
+      --blue: #007aff;
+      --red: #ff5f57;
+      --yellow: #febc2e;
+      --green: #28c840;
+      --text-primary: #1d1d1f;
+      --text-secondary: #86868b;
+      --sidebar-bg: rgba(246, 244, 241, 0.95);
+      --window-bg: #ffffff;
+      --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+    }
+
+    html, body {
+      width: 100%; height: 100%; overflow: hidden;
+      font-family: var(--font); font-size: 13px; color: var(--text-primary);
+      -webkit-font-smoothing: antialiased; user-select: none;
+    }
+
+    /* ===== Desktop ===== */
+    #desktop {
+      position: fixed; inset: 0;
+      background: url("public/background/background.jpg") center/cover no-repeat;
+      background-color: #2c5f8a;
+    }
+
+    /* ===== Menu Bar ===== */
+    #menubar {
+      position: fixed; top: 0; left: 0; right: 0; height: var(--menubar-h);
+      background: rgba(35, 35, 37, 0.72);
+      backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 10px; z-index: 9999; color: #fff; font-size: 13px;
+    }
+    #menubar .left { display: flex; align-items: center; gap: 16px; }
+    #menubar .apple-logo {
+      opacity: 0.9; cursor: pointer; display: flex; align-items: center; line-height: 0;
+    }
+    #menubar .apple-logo svg { width: 14px; height: 17px; display: block; }
+    #menubar .app-name { font-weight: 600; }
+    #menubar .menu-item { opacity: 0.85; cursor: default; }
+    #menubar .menu-item:hover { opacity: 1; }
+    #menubar .right { display: flex; align-items: center; gap: 16px; font-size: 12px; }
+
+    /* ===== Windows ===== */
+    .window {
+      position: absolute; border-radius: var(--radius-window); overflow: hidden;
+      box-shadow: 0 22px 70px 4px rgba(0,0,0,0.28), 0 0 0 0.5px rgba(0,0,0,0.12);
+      display: flex; flex-direction: column; min-width: 400px; min-height: 250px;
+      opacity: 0; transform: scale(0.92);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      pointer-events: none;
+    }
+    .window.visible { opacity: 1; transform: scale(1); pointer-events: auto; }
+    .window.maximized { border-radius: 0 !important; transition: all 0.3s ease; }
+    .window.minimizing { opacity: 0; transform: scale(0.5) translateY(300px); transition: all 0.4s ease; pointer-events: none; }
+
+    /* Title Bar - overlays on top of body so sidebar/content colors show through */
+    .titlebar {
+      height: var(--titlebar-h);
+      background: transparent;
+      display: flex; align-items: center; padding: 0 12px;
+      cursor: default; flex-shrink: 0; position: absolute;
+      top: 0; left: 0; right: 0; z-index: 10;
+    }
+    .window.active .titlebar { background: transparent; }
+    .window:not(.active) .titlebar { background: transparent; }
+    .window:not(.active) .traffic-light .btn { background: #ccc !important; }
+    .window:not(.active) .traffic-light .btn svg { opacity: 0 !important; }
+    .titlebar-title {
+      position: absolute; left: 50%; transform: translateX(-50%);
+      font-size: 13px; font-weight: 500; color: var(--text-primary); opacity: 0.85;
+    }
+    /* Traffic Lights */
+    .traffic-light { display: flex; gap: 8px; z-index: 1; }
+    .traffic-light .btn {
+      width: 12px; height: 12px; border-radius: 50%; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; padding: 0; transition: filter 0.1s;
+      position: relative;
+    }
+    .traffic-light .btn svg {
+      width: 6px; height: 6px; opacity: 0; transition: opacity 0.1s;
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    }
+    .traffic-light:hover .btn svg { opacity: 1; }
+    .traffic-light .btn.close { background: var(--red); }
+    .traffic-light .btn.minimize { background: var(--yellow); }
+    .traffic-light .btn.maximize { background: var(--green); }
+    .traffic-light .btn:active { filter: brightness(0.8); }
+
+    /* Window Body - no padding, sidebar/content extend behind titlebar */
+    .window-body { flex: 1; display: flex; overflow: hidden; background: var(--window-bg); }
+
+    /* Sidebar */
+    .sidebar {
+      width: 240px; min-width: 240px;
+      background: var(--sidebar-bg);
+      backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+      border-right: 1px solid rgba(0,0,0,0.08);
+      display: flex; flex-direction: column; overflow-y: auto;
+    }
+    .sidebar::before {
+      content: ''; display: block; min-height: var(--titlebar-h); flex-shrink: 0;
+      position: sticky; top: 0; z-index: 2; background: inherit;
+    }
+    .sidebar::-webkit-scrollbar { width: 0; }
+
+    .search-wrapper { position: relative; margin: 8px 10px; }
+    .search-wrapper::before {
+      content: "⌕"; position: absolute; left: 8px; top: 50%; transform: translateY(-50%);
+      font-size: 13px; color: var(--text-secondary); z-index: 1;
+    }
+    .search-wrapper input {
+      width: 100%; padding: 5px 8px 5px 26px; border: none; border-radius: 6px;
+      background: rgba(0,0,0,0.05); font-size: 12px; font-family: var(--font);
+      color: var(--text-primary); outline: none;
+    }
+
+    .sidebar-section { padding: 4px 0; }
+    .sidebar-section-title {
+      font-size: 11px; font-weight: 600; color: var(--text-secondary);
+      padding: 6px 16px 4px; text-transform: uppercase; letter-spacing: 0.02em;
+    }
+    .sidebar-section-title.plain {
+      font-weight: 400; text-transform: none; font-size: 12px; color: #999;
+    }
+    .sidebar-item {
+      display: flex; align-items: center; gap: 8px; padding: 4px 12px; margin: 1px 8px;
+      border-radius: 6px; cursor: pointer; font-size: 13px; transition: background 0.1s;
+    }
+    .sidebar-item:hover { background: rgba(0,0,0,0.04); }
+    .sidebar-item.selected { background: var(--blue); color: #fff; }
+    .sidebar-item .icon { font-size: 15px; width: 20px; text-align: center; }
+
+    /* Content area */
+    .content { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+    .content::before {
+      content: ''; display: block; min-height: var(--titlebar-h); flex-shrink: 0;
+      position: sticky; top: 0; z-index: 2; background: var(--window-bg);
+    }
+    .content::-webkit-scrollbar { width: 6px; }
+    .content::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
+
+    /* Resize Handles */
+    .resize-handle { position: absolute; bottom: 0; right: 0; width: 16px; height: 16px; cursor: nwse-resize; }
+    .resize-handle-right { position: absolute; top: 0; right: 0; bottom: 16px; width: 4px; cursor: ew-resize; }
+    .resize-handle-bottom { position: absolute; bottom: 0; left: 0; right: 16px; height: 4px; cursor: ns-resize; }
+    .resize-handle-left { position: absolute; top: 0; left: 0; bottom: 0; width: 4px; cursor: ew-resize; }
+
+    /* ===== Notes App ===== */
+    .notes-sidebar { background: rgba(251, 249, 245, 0.95); }
+    .note-item {
+      padding: 8px 12px; margin: 1px 8px; border-radius: 6px; cursor: pointer; transition: background 0.1s;
+    }
+    .note-item:hover { background: rgba(0,0,0,0.04); }
+    .note-item.selected { background: rgba(255, 210, 50, 0.25); }
+    .note-item .note-title { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+    .note-item .note-meta { font-size: 11px; color: var(--text-secondary); display: flex; gap: 6px; }
+    .note-item .note-preview {
+      font-size: 11px; color: var(--text-secondary);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .note-item.hidden { display: none; }
+
+    .notes-content { padding: 24px 32px; max-width: 680px; line-height: 1.6; }
+    .notes-content .note-date { font-size: 12px; color: var(--text-secondary); text-align: center; margin-bottom: 16px; }
+    .notes-content h1 { font-size: 26px; font-weight: 700; margin-bottom: 12px; }
+    .notes-content p { margin-bottom: 12px; font-size: 14px; }
+    .notes-content h2 { font-size: 18px; font-weight: 700; margin: 20px 0 8px; }
+    .notes-content ul { padding-left: 24px; margin-bottom: 12px; }
+    .notes-content li { margin-bottom: 6px; font-size: 14px; }
+    .notes-content a { color: var(--blue); text-decoration: none; }
+    .notes-content a:hover { text-decoration: underline; }
+
+    /* ===== Photos App ===== */
+    .photos-content { padding: 8px 20px 16px; }
+    .photos-header { margin-bottom: 16px; position: relative; }
+    .photos-header h1 { font-size: 22px; font-weight: 700; }
+    .photos-header .date-range { font-size: 12px; color: var(--text-secondary); }
+    .photos-toolbar {
+      position: absolute; top: 4px; right: 0;
+      display: flex; gap: 0; font-size: 12px;
+      background: rgba(0,0,0,0.06); border-radius: 6px; overflow: hidden;
+    }
+    .photos-toolbar span {
+      color: var(--text-secondary); cursor: pointer; padding: 4px 12px;
+      transition: all 0.15s;
+    }
+    .photos-toolbar span:hover { background: rgba(0,0,0,0.04); }
+    .photos-toolbar span.active { background: #fff; color: var(--text-primary); font-weight: 500;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-radius: 5px; }
+
+    .photo-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 3px;
+    }
+    .photo-item {
+      aspect-ratio: 1; border-radius: 2px; overflow: hidden; cursor: pointer; transition: transform 0.15s;
+    }
+    .photo-item:hover { transform: scale(1.03); z-index: 1; position: relative; }
+    .photo-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    .photo-month-header {
+      font-size: 16px; font-weight: 600; margin: 20px 0 8px; color: var(--text-primary);
+    }
+    .photo-month-header:first-child { margin-top: 0; }
+
+    .photo-year-header {
+      font-size: 28px; font-weight: 700; margin: 24px 0 12px;
+    }
+    .photo-year-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 6px;
+    }
+    .photo-year-item {
+      aspect-ratio: 16/10; border-radius: 6px; overflow: hidden; cursor: pointer;
+      position: relative; transition: transform 0.15s;
+    }
+    .photo-year-item:hover { transform: scale(1.02); }
+    .photo-year-item img { width: 100%; height: 100%; object-fit: cover; }
+    .photo-year-item .year-label {
+      position: absolute; bottom: 8px; left: 10px;
+      color: #fff; font-weight: 600; font-size: 14px;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+    }
+
+    /* Photo Viewer (inline in Photos window) */
+    .photo-viewer-inline {
+      display: flex; flex-direction: column; height: 100%; background: #fff;
+    }
+    .photo-viewer-topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 16px; border-bottom: 1px solid rgba(0,0,0,0.06);
+      flex-shrink: 0;
+    }
+    .photo-viewer-topbar .viewer-back-btn {
+      background: none; border: none; cursor: pointer;
+      font-size: 20px; color: var(--text-secondary); display: flex; align-items: center;
+      transition: color 0.15s;
+    }
+    .photo-viewer-topbar .viewer-back-btn:hover { color: var(--text-primary); }
+    .photo-viewer-topbar .viewer-info { text-align: center; }
+    .photo-viewer-topbar .viewer-info .viewer-date { font-size: 13px; font-weight: 500; }
+    .photo-viewer-topbar .viewer-info .viewer-counter { font-size: 11px; color: var(--text-secondary); }
+    .photo-viewer-topbar .viewer-heart-btn {
+      background: none; border: none; cursor: pointer;
+      font-size: 20px; color: var(--text-secondary); transition: color 0.15s;
+    }
+    .photo-viewer-topbar .viewer-heart-btn:hover { color: #ff3b30; }
+    .photo-viewer-body {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      overflow: hidden; background: #fff; position: relative;
+    }
+    .photo-viewer-body img {
+      max-width: 100%; max-height: 100%; object-fit: contain;
+    }
+    .photo-viewer-body .viewer-nav {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      background: rgba(0,0,0,0.06); border: none; color: var(--text-secondary);
+      font-size: 20px; width: 32px; height: 32px; border-radius: 50%;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s; opacity: 0;
+    }
+    .photo-viewer-body:hover .viewer-nav { opacity: 1; }
+    .photo-viewer-body .viewer-nav:hover { background: rgba(0,0,0,0.12); }
+    .photo-viewer-body .viewer-nav.prev { left: 12px; }
+    .photo-viewer-body .viewer-nav.next { right: 12px; }
+
+    /* ===== FaceTime App ===== */
+    .facetime-titlebar { background: transparent !important; }
+    .facetime-titlebar .traffic-light .btn.close { background: rgba(255,59,48,0.9); }
+    .facetime-titlebar .traffic-light .btn.minimize { background: rgba(255,204,0,0.9); }
+    .facetime-titlebar .traffic-light .btn.maximize { background: rgba(40,205,65,0.9); }
+
+    .facetime-body {
+      position: relative; background: #000 !important; overflow: hidden;
+      padding-top: 0 !important;
+    }
+    .facetime-body > video#facetime-video {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+    .facetime-contact {
+      position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(0,0,0,0.35); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      padding: 5px 14px; border-radius: 20px; color: #fff; font-size: 13px; font-weight: 500;
+      z-index: 5;
+    }
+    .facetime-chevron { font-size: 16px; opacity: 0.7; }
+    .facetime-pip {
+      position: absolute; top: 54px; right: 16px;
+      width: 140px; height: 190px; border-radius: 12px; overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4); z-index: 5;
+      cursor: grab; background: #1a1a1a;
+    }
+    .facetime-pip video {
+      width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);
+    }
+    .facetime-controls {
+      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 16px; z-index: 5;
+    }
+    .ft-btn {
+      width: 48px; height: 48px; border-radius: 50%; border: none;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: transform 0.15s;
+    }
+    .ft-btn:hover { transform: scale(1.08); }
+    .ft-btn svg { width: 22px; height: 22px; }
+    .ft-btn.ft-video { background: #30d158; }
+    .ft-btn.ft-mute { background: rgba(255,255,255,0.85); }
+    .ft-btn.ft-mute svg { stroke: #ff9500; fill: none; }
+    .ft-btn.ft-mute.muted { background: #ff9500; }
+    .ft-btn.ft-mute.muted svg { stroke: #fff; }
+    .ft-btn.ft-more { background: rgba(255,255,255,0.15); border: 1.5px solid rgba(255,255,255,0.35); }
+    .ft-btn.ft-end { background: #ff3b30; }
+
+    /* ===== Messages App ===== */
+    .messages-sidebar { background: rgba(246, 244, 241, 0.95); }
+    .pinned-contacts {
+      display: flex; gap: 12px; padding: 12px 16px 8px; justify-content: flex-start; overflow-x: auto;
+    }
+    .pinned-contact { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; }
+    .pinned-contact .avatar {
+      width: 48px; height: 48px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-weight: 500; color: #fff; overflow: hidden; flex-shrink: 0;
+    }
+    .pinned-contact .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .pinned-contact .name {
+      font-size: 10px; color: var(--text-secondary); text-align: center;
+      max-width: 60px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .conversation-list { flex: 1; overflow-y: auto; }
+    .conversation-item {
+      display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+      margin: 1px 8px; border-radius: 8px; cursor: pointer; transition: background 0.1s;
+    }
+    .conversation-item:hover { background: rgba(0,0,0,0.04); }
+    .conversation-item.selected { background: var(--blue); color: #fff; }
+    .conversation-item.selected .conv-preview,
+    .conversation-item.selected .conv-time { color: rgba(255,255,255,0.75) !important; }
+    .conversation-item.hidden { display: none; }
+    .conv-avatar {
+      width: 38px; height: 38px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 500; color: #fff; flex-shrink: 0; overflow: hidden;
+    }
+    .conv-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .conv-info { flex: 1; min-width: 0; }
+    .conv-name { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+    .conv-preview {
+      font-size: 12px; color: var(--text-secondary);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .conv-time { font-size: 11px; color: var(--text-secondary); flex-shrink: 0; }
+
+    /* Chat Area */
+    .chat-area { flex: 1; display: flex; flex-direction: column; background: #fff; }
+    .chat-area::before {
+      content: ''; display: block; min-height: var(--titlebar-h); flex-shrink: 0;
+      position: sticky; top: 0; z-index: 2; background: #fff;
+    }
+    .chat-header {
+      padding: 10px 16px; border-bottom: 1px solid rgba(0,0,0,0.06);
+      font-size: 13px; color: var(--text-secondary);
+    }
+    .chat-header span { font-weight: 500; color: var(--text-primary); }
+    .chat-messages {
+      flex: 1; overflow-y: auto; padding: 16px 20px;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .chat-messages::-webkit-scrollbar { width: 6px; }
+    .chat-messages::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 3px; }
+    .message-group { margin-bottom: 8px; }
+    .message-sender-name { font-size: 11px; color: var(--text-secondary); margin-bottom: 3px; margin-left: 12px; }
+    .message-bubble {
+      max-width: 65%; padding: 8px 12px; border-radius: 18px; font-size: 14px;
+      line-height: 1.4; margin-bottom: 2px; width: fit-content; word-wrap: break-word;
+    }
+    .message-bubble.sent {
+      background: var(--blue); color: #fff; margin-left: auto; border-bottom-right-radius: 6px;
+    }
+    .message-bubble.received {
+      background: #e9e9eb; color: var(--text-primary); border-bottom-left-radius: 6px;
+    }
+    .message-status { font-size: 10px; color: var(--text-secondary); text-align: right; margin-top: 2px; }
+    .chat-input-area {
+      padding: 10px 16px; border-top: 1px solid rgba(0,0,0,0.06);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .chat-input-area input {
+      flex: 1; padding: 8px 14px; border: 1px solid rgba(0,0,0,0.1); border-radius: 18px;
+      font-size: 13px; font-family: var(--font); outline: none; background: #f5f5f5;
+    }
+    .chat-input-area input:focus { border-color: var(--blue); background: #fff; }
+    .chat-input-area .emoji-btn {
+      font-size: 20px; cursor: pointer; opacity: 0.6; transition: opacity 0.15s;
+      background: none; border: none;
+    }
+    .chat-input-area .emoji-btn:hover { opacity: 1; }
+
+    /* Message wrappers for reactions */
+    .message-wrapper { margin-bottom: 2px; }
+    .message-wrapper.sent { display: flex; flex-direction: column; align-items: flex-end; }
+    .message-wrapper.received { margin-bottom: 8px; }
+    .message-wrapper .message-bubble { cursor: pointer; }
+
+    /* Reaction bar (tapback) */
+    .reaction-bar {
+      position: absolute; top: -44px;
+      display: flex; gap: 2px; padding: 6px 10px;
+      background: #fff; border-radius: 22px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.18), 0 0 0 0.5px rgba(0,0,0,0.08);
+      z-index: 20;
+    }
+    .message-wrapper.sent .reaction-bar { right: 0; }
+    .message-wrapper.received .reaction-bar { left: 0; }
+    .reaction-option {
+      font-size: 20px; cursor: pointer; padding: 2px 4px;
+      border-radius: 50%; transition: transform 0.12s, background 0.12s;
+      line-height: 1;
+    }
+    .reaction-option:hover { transform: scale(1.3); background: rgba(0,0,0,0.06); }
+
+    /* Reaction badge on message */
+    .message-reaction {
+      display: inline-flex; align-items: center; font-size: 14px;
+      background: #fff; border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 12px; padding: 1px 6px; margin-top: -4px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08); line-height: 1.3;
+    }
+
+    /* Emoji picker */
+    #emoji-picker {
+      position: absolute; bottom: 54px; right: 12px;
+      width: 320px; max-height: 360px;
+      background: #fff; border-radius: 12px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.2), 0 0 0 0.5px rgba(0,0,0,0.08);
+      z-index: 30; display: flex; flex-direction: column; overflow: hidden;
+    }
+    .emoji-picker-tabs {
+      display: flex; gap: 2px; padding: 8px 10px 4px;
+      border-bottom: 1px solid rgba(0,0,0,0.06); flex-shrink: 0;
+    }
+    .emoji-tab {
+      font-size: 18px; cursor: pointer; padding: 4px 6px; border-radius: 6px;
+      transition: background 0.1s; opacity: 0.5;
+    }
+    .emoji-tab.active { opacity: 1; background: rgba(0,0,0,0.06); }
+    .emoji-tab:hover { opacity: 1; }
+    .emoji-picker-search { padding: 6px 10px; flex-shrink: 0; }
+    .emoji-picker-search input {
+      width: 100%; padding: 5px 10px; border: 1px solid rgba(0,0,0,0.1);
+      border-radius: 6px; font-size: 12px; outline: none; background: #f5f5f5;
+      font-family: var(--font);
+    }
+    .emoji-picker-grid {
+      flex: 1; overflow-y: auto; padding: 4px 10px 10px;
+    }
+    .emoji-picker-grid::-webkit-scrollbar { width: 4px; }
+    .emoji-picker-grid::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 2px; }
+    .emoji-cat-label { font-size: 11px; font-weight: 600; color: #888; padding: 6px 0 4px; }
+    .emoji-cat-grid { display: flex; flex-wrap: wrap; gap: 1px; }
+    .emoji-item {
+      font-size: 24px; cursor: pointer; padding: 3px; border-radius: 6px;
+      transition: background 0.1s; line-height: 1.2;
+    }
+    .emoji-item:hover { background: rgba(0,0,0,0.06); }
+
+    /* ===== Dock ===== */
+    #dock {
+      position: fixed; bottom: 3px; left: 50%; transform: translateX(-50%);
+      display: flex; align-items: flex-end; gap: 2px;
+      padding: 3px 8px 3px;
+      background: rgba(255,255,255,0.2);
+      backdrop-filter: saturate(180%) blur(25px); -webkit-backdrop-filter: saturate(180%) blur(25px);
+      border-radius: 18px; border: 1px solid rgba(255,255,255,0.3); z-index: 9998;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    #dock.dock-hidden {
+      opacity: 0; pointer-events: none; transform: translateX(-50%) translateY(100%);
+    }
+    .dock-separator { width: 1px; height: 38px; background: rgba(255,255,255,0.3); margin: 0 5px; align-self: center; }
+    .dock-item {
+      display: flex; flex-direction: column; align-items: center;
+      position: relative; padding: 0 1px;
+    }
+    .dock-icon-wrapper {
+      width: var(--dock-icon); height: var(--dock-icon);
+      transition: transform 0.15s ease;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+    }
+    .dock-item:hover .dock-icon-wrapper {
+      transform: scale(1.12) translateY(-4px);
+    }
+    .dock-icon-wrapper img {
+      width: 100%; height: 100%; border-radius: 11px;
+      pointer-events: none;
+    }
+    .dock-item .dot {
+      width: 4px; height: 4px; border-radius: 50%; background: rgba(255,255,255,0.85);
+      margin-top: 2px; opacity: 0; transition: opacity 0.2s;
+    }
+    .dock-item .dot.visible { opacity: 1; }
+    .dock-item .tooltip {
+      position: absolute; bottom: 100%; margin-bottom: 6px;
+      background: rgba(30,30,30,0.9); backdrop-filter: blur(12px);
+      color: #fff; font-size: 12px; font-weight: 500;
+      padding: 4px 12px; border-radius: 4px;
+      white-space: nowrap; opacity: 0; pointer-events: none;
+      transition: opacity 0.12s; z-index: 10;
+    }
+    .dock-item .tooltip::after {
+      content: ""; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+      border: 5px solid transparent; border-top-color: rgba(30,30,30,0.9);
+    }
+    .dock-item:hover .tooltip { opacity: 1; }
+    @keyframes dockBounce {
+      0%, 100% { transform: translateY(0); }
+      25% { transform: translateY(-14px); }
+      50% { transform: translateY(-2px); }
+      75% { transform: translateY(-8px); }
+    }
+    .dock-item.bouncing .dock-icon-wrapper { animation: dockBounce 0.6s ease; }
+
+    /* ===== Apple Menu Dropdown ===== */
+    .apple-logo { cursor: pointer !important; }
+    #apple-menu {
+      display: none; position: fixed; top: var(--menubar-h); left: 6px;
+      width: 260px; background: rgba(40,40,42,0.92);
+      backdrop-filter: saturate(180%) blur(25px); -webkit-backdrop-filter: saturate(180%) blur(25px);
+      border-radius: 6px; padding: 4px 0; z-index: 10001;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.45), 0 0 0 0.5px rgba(255,255,255,0.12);
+      color: #fff; font-size: 13px;
+    }
+    #apple-menu.open { display: block; }
+    .apple-menu-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 4px 12px; margin: 0 4px; border-radius: 4px; cursor: default;
+      transition: background 0.08s;
+    }
+    .apple-menu-item:hover { background: var(--blue); }
+    .apple-menu-item .am-icon { width: 18px; text-align: center; font-size: 14px; opacity: 0.8; }
+    .apple-menu-separator { height: 1px; background: rgba(255,255,255,0.12); margin: 4px 0; }
+
+    /* ===== About This Mac Modal ===== */
+    #about-mac-overlay {
+      display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.35); z-index: 10002;
+      justify-content: center; align-items: center;
+    }
+    #about-mac-overlay.open { display: flex; }
+    #about-mac {
+      width: 380px; background: rgba(242,240,237,0.97);
+      backdrop-filter: saturate(180%) blur(30px); -webkit-backdrop-filter: saturate(180%) blur(30px);
+      border-radius: 12px; overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 0 0.5px rgba(0,0,0,0.12);
+      text-align: center; padding: 14px 36px 24px; position: relative;
+    }
+    #about-mac .about-close-btn {
+      position: absolute; top: 10px; left: 12px; width: 12px; height: 12px; border-radius: 50%;
+      background: var(--red); border: none; cursor: pointer; padding: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #about-mac .about-close-btn:hover svg { opacity: 1; }
+    #about-mac .about-close-btn svg { opacity: 0; width: 6px; height: 6px; }
+    #about-mac .mac-image {
+      width: 180px; margin: 20px auto 10px; display: block;
+    }
+    #about-mac .mac-image svg { width: 100%; height: auto; }
+    #about-mac h2 { font-size: 28px; font-weight: 500; margin: 8px 0 2px; color: var(--text-primary); }
+    #about-mac .mac-subtitle { font-size: 13px; color: var(--text-secondary); margin-bottom: 20px; }
+    #about-mac .mac-specs {
+      text-align: center; margin: 0 auto; width: 100%;
+    }
+    #about-mac .mac-spec-row {
+      display: flex; justify-content: center; gap: 10px; padding: 3px 0;
+      font-size: 13px; line-height: 1.5;
+    }
+    #about-mac .mac-spec-row .label {
+      color: var(--text-secondary); font-weight: 600; text-align: right; min-width: 110px;
+    }
+    #about-mac .mac-spec-row .value { text-align: left; min-width: 140px; color: var(--text-primary); }
+    #about-mac .about-more-btn {
+      margin: 20px auto 14px; display: inline-block; padding: 6px 20px;
+      border: 1px solid rgba(0,0,0,0.15); border-radius: 6px; background: rgba(255,255,255,0.6);
+      font-size: 13px; color: var(--text-primary); cursor: pointer; font-family: var(--font);
+    }
+    #about-mac .about-more-btn:hover { background: rgba(255,255,255,0.9); }
+    #about-mac .about-footer {
+      font-size: 10px; color: var(--text-secondary); line-height: 1.5; margin-top: 6px;
+    }
+    #about-mac .about-footer a { color: var(--text-secondary); text-decoration: underline; }
+
+    /* ===== Contact App ===== */
+    .contact-body {
+      display: flex; height: 100%; background: #fff;
+    }
+    .contact-sidebar {
+      width: 240px; min-width: 240px; background: var(--sidebar-bg);
+      overflow-y: auto; border-right: 1px solid rgba(0,0,0,0.08);
+      display: flex; flex-direction: column;
+    }
+    .contact-sidebar::before {
+      content: ''; display: block; min-height: var(--titlebar-h); flex-shrink: 0;
+      position: sticky; top: 0; z-index: 2; background: var(--sidebar-bg);
+    }
+    .contact-sidebar::-webkit-scrollbar { width: 0; }
+    .contact-letter-header {
+      font-size: 12px; font-weight: 600; color: var(--text-secondary);
+      padding: 10px 16px 4px; text-transform: uppercase;
+    }
+    .contact-sidebar-item {
+      display: flex; align-items: center; gap: 10px; padding: 6px 10px;
+      color: var(--text-primary); font-size: 13px; cursor: pointer; border-radius: 8px; margin: 1px 6px;
+      transition: background 0.1s;
+    }
+    .contact-sidebar-item:hover { background: rgba(0,0,0,0.04); }
+    .contact-sidebar-item.selected { background: var(--blue); color: #fff; }
+    .contact-sidebar-item .contact-avatar-sm {
+      width: 28px; height: 28px; min-width: 28px; min-height: 28px;
+      aspect-ratio: 1 / 1; border-radius: 50%;
+      background: linear-gradient(135deg,#b0b0b0,#8e8e93);
+      display: flex; align-items: center; justify-content: center; color: #fff;
+      font-size: 10px; font-weight: 600; flex-shrink: 0; overflow: hidden;
+    }
+    .contact-sidebar-item .contact-avatar-sm img {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+    }
+    .contact-detail {
+      flex: 1; overflow-y: auto;
+      display: flex; flex-direction: column; align-items: center; padding-bottom: 30px;
+      background: #fff;
+    }
+    .contact-detail::before {
+      content: ''; display: block; min-height: var(--titlebar-h); flex-shrink: 0;
+      position: sticky; top: 0; z-index: 2; background: #fff; width: 100%;
+    }
+    .contact-detail::-webkit-scrollbar { width: 0; }
+    .contact-detail .contact-avatar-lg {
+      width: 120px; height: 120px; min-width: 120px; min-height: 120px;
+      aspect-ratio: 1 / 1; border-radius: 50%;
+      background: linear-gradient(135deg,#b0b0b0,#8e8e93);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 42px; font-weight: 400; margin-top: 24px;
+      overflow: hidden; flex-shrink: 0;
+    }
+    .contact-detail .contact-avatar-lg img {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+    }
+    .contact-detail .contact-name {
+      font-size: 26px; font-weight: 500; color: var(--text-primary); margin-top: 14px;
+      text-align: center; line-height: 1.2;
+    }
+    .contact-detail .contact-actions {
+      display: flex; gap: 24px; margin-top: 18px;
+    }
+    .contact-detail .contact-action-btn {
+      display: flex; flex-direction: column; align-items: center; gap: 5px;
+      color: var(--text-secondary); font-size: 10px; cursor: pointer;
+    }
+    .contact-detail .contact-action-btn .ca-icon {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center;
+      font-size: 16px; transition: background 0.15s;
+    }
+    .contact-detail .contact-action-btn:hover .ca-icon { background: rgba(0,0,0,0.1); }
+    .contact-detail .contact-poster-card {
+      width: 88%; background: rgba(0,0,0,0.03); border-radius: 10px;
+      margin-top: 20px; padding: 10px 14px;
+      display: flex; align-items: center; gap: 10px;
+      font-size: 13px; color: var(--text-secondary);
+    }
+    .contact-poster-card .poster-avatar {
+      width: 28px; height: 28px; min-width: 28px; min-height: 28px;
+      aspect-ratio: 1 / 1; border-radius: 50%; background: linear-gradient(135deg,#b0b0b0,#8e8e93);
+      display: flex; align-items: center; justify-content: center; color: #fff;
+      font-size: 10px; font-weight: 600; flex-shrink: 0; overflow: hidden;
+    }
+    .contact-poster-card .poster-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .contact-poster-card .poster-label { flex: 1; }
+    .contact-poster-card .poster-chevron { opacity: 0.3; }
+    .contact-detail .contact-info-card {
+      width: 88%; background: rgba(0,0,0,0.03); border-radius: 10px;
+      margin-top: 12px; padding: 0; overflow: hidden;
+    }
+    .contact-detail .contact-info-row {
+      padding: 10px 14px; font-size: 13px; color: var(--text-primary);
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+    .contact-detail .contact-info-row:last-child { border-bottom: none; }
+    .contact-detail .contact-info-row .info-label { font-size: 11px; color: var(--text-secondary); margin-bottom: 3px; }
+    .contact-detail .contact-info-row .info-value { color: var(--blue); }
+
+    /* ===== Finder App ===== */
+    .finder-body {
+      display: flex; height: 100%; background: #fff;
+    }
+    .finder-sidebar {
+      width: 200px; min-width: 200px; background: var(--sidebar-bg);
+      border-right: 1px solid rgba(0,0,0,0.08);
+      overflow-y: auto; display: flex; flex-direction: column;
+    }
+    .finder-sidebar::before {
+      content: ''; display: block; min-height: var(--titlebar-h); flex-shrink: 0;
+      position: sticky; top: 0; z-index: 2; background: var(--sidebar-bg);
+    }
+    .finder-sidebar::-webkit-scrollbar { width: 0; }
+    .finder-sidebar-section { padding: 2px 0; }
+    .finder-sidebar-label {
+      font-size: 11px; font-weight: 600; color: var(--text-secondary);
+      padding: 8px 14px 4px; text-transform: uppercase; letter-spacing: 0.02em;
+    }
+    .finder-sidebar-item {
+      display: flex; align-items: center; gap: 7px; padding: 3px 10px; margin: 1px 6px;
+      border-radius: 6px; cursor: pointer; font-size: 13px; color: var(--text-primary);
+      transition: background 0.1s;
+    }
+    .finder-sidebar-item:hover { background: rgba(0,0,0,0.04); }
+    .finder-sidebar-item.selected { background: var(--blue); color: #fff; }
+    .finder-sidebar-item.selected .finder-sidebar-icon { color: #fff; }
+    .finder-sidebar-icon { font-size: 14px; width: 18px; text-align: center; color: var(--blue); flex-shrink: 0; }
+    .finder-content {
+      flex: 1; overflow-y: auto; display: flex; flex-direction: column;
+    }
+    .finder-content::before {
+      content: ''; display: block; min-height: var(--titlebar-h); flex-shrink: 0;
+      position: sticky; top: 0; z-index: 2; background: #fff;
+    }
+    .finder-content::-webkit-scrollbar { width: 6px; }
+    .finder-content::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
+    .finder-list-header {
+      display: flex; align-items: center; padding: 6px 16px;
+      font-size: 11px; font-weight: 600; color: var(--text-secondary);
+      border-bottom: 1px solid rgba(0,0,0,0.08); text-transform: uppercase; letter-spacing: 0.02em;
+    }
+    .finder-list-header .fh-name { flex: 1; }
+    .finder-list-header .fh-kind { width: 130px; }
+    .finder-list-header .fh-date { width: 170px; }
+    .finder-file-row {
+      display: flex; align-items: center; padding: 5px 16px;
+      font-size: 13px; cursor: pointer; transition: background 0.1s;
+      border-bottom: 1px solid rgba(0,0,0,0.03);
+    }
+    .finder-file-row:hover { background: rgba(0,0,0,0.03); }
+    .finder-file-row.selected { background: var(--blue); color: #fff; }
+    .finder-file-row.selected .ff-kind,
+    .finder-file-row.selected .ff-date { color: rgba(255,255,255,0.75); }
+    .finder-file-row .ff-icon { width: 20px; height: 20px; margin-right: 8px; flex-shrink: 0; border-radius: 4px; }
+    .finder-file-row .ff-icon img { width: 100%; height: 100%; object-fit: contain; }
+    .finder-file-row .ff-icon.folder-icon {
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+    .finder-file-row .ff-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .finder-file-row .ff-kind { width: 130px; color: var(--text-secondary); font-size: 12px; flex-shrink: 0; }
+    .finder-file-row .ff-date { width: 170px; color: var(--text-secondary); font-size: 12px; flex-shrink: 0; }
+    .finder-empty {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      color: var(--text-secondary); font-size: 13px; padding: 40px;
+    }
+    .finder-breadcrumb {
+      font-size: 12px; font-weight: 500; color: var(--text-primary);
+      padding: 0 16px 6px; display: none;
+    }
+
+    /* Drag / Resize helpers */
+    body.dragging, body.dragging * { user-select: none !important; cursor: grabbing !important; }
+    body.resizing, body.resizing * { user-select: none !important; }
+  </style>
+</head>
+<body>
+  <div id="desktop">
+    <!-- Menu Bar -->
+    <div id="menubar">
+      <div class="left">
+        <span class="apple-logo" onclick="toggleAppleMenu(event)"><svg viewBox="0 0 384 512" fill="white"><path d="M319.1 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7-55.8 .9-115.1 44.5-115.1 133.2 0 26.2 4.8 53.3 14.4 81.2 12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zM262.5 104.5c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg></span>
+        <span class="app-name" id="menubar-app-name">Finder</span>
+        <span class="menu-item">File</span>
+        <span class="menu-item">Edit</span>
+        <span class="menu-item">View</span>
+        <span class="menu-item">Window</span>
+        <span class="menu-item">Help</span>
+      </div>
+      <div class="right"><span id="menubar-time"></span></div>
+    </div>
+
+    <!-- Apple Menu Dropdown -->
+    <div id="apple-menu">
+      <div class="apple-menu-item" onclick="appleMenuAction('about-mac')">
+        <span class="am-icon">💻</span> About This Mac
+      </div>
+      <div class="apple-menu-separator"></div>
+      <div class="apple-menu-item" onclick="appleMenuAction('who-tonchi')">
+        <span class="am-icon">🩷</span> Who is Tonchi?
+      </div>
+      <div class="apple-menu-item" onclick="appleMenuAction('favorite-music')">
+        <span class="am-icon">🎵</span> Favorite Music
+      </div>
+      <div class="apple-menu-item" onclick="appleMenuAction('who-nacho')">
+        <span class="am-icon">🤫</span> Who is Nacho?
+      </div>
+    </div>
+
+    <!-- About This Mac Modal -->
+    <div id="about-mac-overlay" onclick="closeAboutMac(event)">
+      <div id="about-mac" onclick="event.stopPropagation()">
+        <button class="about-close-btn" onclick="closeAboutMac(event)">
+          <svg viewBox="0 0 6 6"><path d="M0.5 0.5L5.5 5.5M5.5 0.5L0.5 5.5" stroke="#820005" stroke-width="1.1" stroke-linecap="round"/></svg>
+        </button>
+        <div class="mac-image">
+          <svg viewBox="0 0 200 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Screen -->
+            <rect x="35" y="8" width="130" height="85" rx="5" fill="#1a1a1a"/>
+            <rect x="40" y="13" width="120" height="75" rx="2" fill="#5ba3d9"/>
+            <rect x="40" y="13" width="120" height="75" rx="2" fill="url(#screenGrad)"/>
+            <!-- Bezel bottom -->
+            <path d="M35 88 Q35 93 40 93 L160 93 Q165 93 165 88" fill="#1a1a1a"/>
+            <circle cx="100" cy="11" r="1.5" fill="#333"/>
+            <!-- Base -->
+            <path d="M20 96 L180 96 L185 100 Q185 103 182 103 L18 103 Q15 103 15 100 Z" fill="#c0c0c4"/>
+            <rect x="72" y="93" width="56" height="3" rx="1" fill="#888"/>
+            <defs>
+              <linearGradient id="screenGrad" x1="40" y1="13" x2="160" y2="88" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#7ec8e3" stop-opacity="0.4"/>
+                <stop offset="100%" stop-color="#3a8fd4" stop-opacity="0.3"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <h2>MacBook Air</h2>
+        <div class="mac-subtitle">13 pulgadas, M4, 2025</div>
+        <div class="mac-specs">
+          <div class="mac-spec-row"><span class="label">Chip</span><span class="value">Apple M4</span></div>
+          <div class="mac-spec-row"><span class="label">Memoria</span><span class="value">16 GB</span></div>
+          <div class="mac-spec-row"><span class="label">Numero de serie</span><span class="value">T0NCH1M4TT4</span></div>
+          <div class="mac-spec-row"><span class="label">macOS</span><span class="value">Tahoe 26.2</span></div>
+        </div>
+        <button class="about-more-btn">Mas informacion...</button>
+        <div class="about-footer">
+          <div>TM y &copy; 1983-2026 Apple Inc.</div>
+          <div>Todos los derechos reservados.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Finder Window ===== -->
+    <div class="window" id="win-finder" style="top:60px;left:100px;width:760px;height:480px;z-index:99;">
+      <div class="titlebar" data-window="win-finder" style="background:transparent !important;">
+        <div class="traffic-light">
+          <button class="btn close" onclick="closeWindow('win-finder')"><svg viewBox="0 0 6 6"><path d="M0.5 0.5L5.5 5.5M5.5 0.5L0.5 5.5" stroke="#820005" stroke-width="1.1" stroke-linecap="round"/></svg></button>
+          <button class="btn minimize" onclick="minimizeWindow('win-finder')"><svg viewBox="0 0 6 6"><path d="M0.5 3h5" stroke="#9a5518" stroke-width="1.1" stroke-linecap="round"/></svg></button>
+          <button class="btn maximize" onclick="maximizeWindow('win-finder')"><svg viewBox="0 0 6 6"><path d="M0.5 2.5V0.5H2.5" stroke="#006500" stroke-width="1.1" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 3.5V5.5H3.5" stroke="#006500" stroke-width="1.1" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+      </div>
+      <div class="window-body finder-body">
+        <div class="finder-sidebar" id="finder-sidebar-el"></div>
+        <div class="finder-content" id="finder-content-el"></div>
+      </div>
+      <div class="resize-handle" data-window="win-finder"></div>
+      <div class="resize-handle-right" data-window="win-finder"></div>
+      <div class="resize-handle-bottom" data-window="win-finder"></div>
+      <div class="resize-handle-left" data-window="win-finder"></div>
+    </div>
+
+    <!-- ===== Notes Window ===== -->
+    <div class="window visible active" id="win-notes" style="top:50px;left:60px;width:780px;height:510px;z-index:102;">
+      <div class="titlebar" data-window="win-notes">
+        <div class="traffic-light">
+          <button class="btn close" onclick="closeWindow('win-notes')"><svg viewBox="0 0 6 6"><path d="M0.5 0.5L5.5 5.5M5.5 0.5L0.5 5.5" stroke="#820005" stroke-width="1.1" stroke-linecap="round"/></svg></button>
+          <button class="btn minimize" onclick="minimizeWindow('win-notes')"><svg viewBox="0 0 6 6"><path d="M0.5 3h5" stroke="#9a5518" stroke-width="1.1" stroke-linecap="round"/></svg></button>
+          <button class="btn maximize" onclick="maximizeWindow('win-notes')"><svg viewBox="0 0 6 6"><path d="M0.5 2.5V0.5H2.5" stroke="#006500" stroke-width="1.1" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 3.5V5.5H3.5" stroke="#006500" stroke-width="1.1" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+      </div>
+      <div class="window-body">
+        <div class="sidebar notes-sidebar" id="notes-sidebar"></div>
+        <div class="content" id="notes-content" style="overflow-y:auto;"></div>
+      </div>
+      <div class="resize-handle" data-window="win-notes"></div>
+      <div class="resize-handle-right" data-window="win-notes"></div>
+      <div class="resize-handle-bottom" data-window="win-notes"></div>
+      <div class="resize-handle-left" data-window="win-notes"></div>
+    </div>
+
+    <!-- ===== Photos Window ===== -->
+    <div class="window" id="win-photos" style="top:80px;left:180px;width:740px;height:510px;z-index:101;">
+      <div class="titlebar" data-window="win-photos">
+        <div class="traffic-light">
+          <button class="btn close" onclick="closeWindow('win-photos')"><svg viewBox="0 0 6 6"><path d="M0.5 0.5L5.5 5.5M5.5 0.5L0.5 5.5" stroke="#820005" stroke-width="1.1" stroke-linecap="round"/></svg></button>
+          <button class="btn minimize" onclick="minimizeWindow('win-photos')"><svg viewBox="0 0 6 6"><path d="M0.5 3h5" stroke="#9a5518" stroke-width="1.1" stroke-linecap="round"/></svg></button>
+          <button class="btn maximize" onclick="maximizeWindow('win-photos')"><svg viewBox="0 0 6 6"><path d="M0.5 2.5V0.5H2.5" stroke="#006500" stroke-width="1.1" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 3.5V5.5H3.5" stroke="#006500" stroke-width="1.1" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+      </div>
+      <div class="window-body">
+        <div class="sidebar" id="photos-sidebar"></div>
+        <div class="content" id="photos-content" style="overflow-y:auto;"></div>
+      </div>
+      <div class="resize-handle" data-window="win-photos"></div>
+      <div class="resize-handle-right" data-window="win-photos"></div>
+      <div class="resize-handle-bottom" data-window="win-photos"></div>
+      <div class="resize-handle-left" data-window="win-photos"></div>
+    </div>
+
+    <!-- ===== Messages Window ===== -->
+    <div class="window" id="win-messages" style="top:65px;left:300px;width:760px;height:520px;z-index:100;">
+      <div class="titlebar" data-window="win-messages">
+        <div class="traffic-light">
+          <button class="btn close" onclick="closeWindow('win-messages')"><svg viewBox="0 0 6 6"><path d="M0.5 0.5L5.5 5.5M5.5 0.5L0.5 5.5" stroke="#820005" stroke-width="1.1" stroke-linecap="round"/></svg></button>
+          <button class="btn minimize" onclick="minimizeWindow('win-messages')"><svg viewBox="0 0 6 6"><path d="M0.5 3h5" stroke="#9a5518" stroke-width="1.1" stroke-linecap="round"/></svg></button>
+          <button class="btn maximize" onclick="maximizeWindow('win-messages')"><svg viewBox="0 0 6 6"><path d="M0.5 2.5V0.5H2.5" stroke="#006500" stroke-width="1.1" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 3.5V5.5H3.5" stroke="#006500" stroke-width="1.1" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+      </div>
+      <div class="window-body">
+        <div class="sidebar messages-sidebar" id="messages-sidebar"></div>
+        <div class="chat-area" id="messages-chat"></div>
+      </div>
+      <div class="resize-handle" data-window="win-messages"></div>
+      <div class="resize-handle-right" data-window="win-messages"></div>
+      <div class="resize-handle-bottom" data-window="win-messages"></div>
+      <div class="resize-handle-left" data-window="win-messages"></div>
+    </div>
+
+    <!-- ===== Contact Window (secret) ===== -->
+    <div class="window" id="win-contact" style="top:60px;left:220px;width:640px;height:480px;z-index:100;">
+      <div class="titlebar" data-window="win-contact" style="background:transparent !important;">
+        <div class="traffic-light">
+          <button class="btn close" onclick="closeWindow('win-contact')"><svg viewBox="0 0 6 6"><path d="M0.5 0.5L5.5 5.5M5.5 0.5L0.5 5.5" stroke="#820005" stroke-width="1.1" stroke-linecap="round"/></svg></button>
+          <button class="btn minimize" onclick="minimizeWindow('win-contact')"><svg viewBox="0 0 6 6"><path d="M0.5 3h5" stroke="#9a5518" stroke-width="1.1" stroke-linecap="round"/></svg></button>
+          <button class="btn maximize" onclick="maximizeWindow('win-contact')"><svg viewBox="0 0 6 6"><path d="M0.5 2.5V0.5H2.5" stroke="#006500" stroke-width="1.1" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 3.5V5.5H3.5" stroke="#006500" stroke-width="1.1" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+      </div>
+      <div class="window-body contact-body" id="contact-body">
+        <div class="contact-sidebar" id="contact-sidebar-el"></div>
+        <div class="contact-detail" id="contact-detail-el"></div>
+      </div>
+      <div class="resize-handle" data-window="win-contact"></div>
+      <div class="resize-handle-right" data-window="win-contact"></div>
+      <div class="resize-handle-bottom" data-window="win-contact"></div>
+      <div class="resize-handle-left" data-window="win-contact"></div>
+    </div>
+
+    <!-- ===== FaceTime Window ===== -->
+    <div class="window" id="win-facetime" style="top:50px;left:200px;width:720px;height:540px;z-index:100;">
+      <div class="titlebar facetime-titlebar" data-window="win-facetime">
+        <div class="traffic-light">
+          <button class="btn close" onclick="closeWindow('win-facetime')"><svg viewBox="0 0 6 6"><path d="M0.5 0.5L5.5 5.5M5.5 0.5L0.5 5.5" stroke="#820005" stroke-width="1.1" stroke-linecap="round"/></svg></button>
+          <button class="btn minimize" onclick="minimizeWindow('win-facetime')"><svg viewBox="0 0 6 6"><path d="M0.5 3h5" stroke="#9a5518" stroke-width="1.1" stroke-linecap="round"/></svg></button>
+          <button class="btn maximize" onclick="maximizeWindow('win-facetime')"><svg viewBox="0 0 6 6"><path d="M0.5 2.5V0.5H2.5" stroke="#006500" stroke-width="1.1" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 3.5V5.5H3.5" stroke="#006500" stroke-width="1.1" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+      </div>
+      <div class="window-body facetime-body">
+        <!-- Main video -->
+        <video id="facetime-video" autoplay loop muted playsinline>
+          <source src="public/background/video/call.mp4" type="video/mp4" />
+        </video>
+        <!-- Contact name overlay -->
+        <div class="facetime-contact">
+          <span class="facetime-contact-name">Ini Matta</span>
+          <span class="facetime-chevron">›</span>
+        </div>
+        <!-- Self camera (PiP) -->
+        <div class="facetime-pip">
+          <video id="facetime-webcam" autoplay muted playsinline></video>
+        </div>
+        <!-- Controls bar -->
+        <div class="facetime-controls">
+          <button class="ft-btn ft-video" title="Video">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+          </button>
+          <button class="ft-btn ft-mute" id="ft-mute-btn" title="Mute" onclick="toggleFacetimeMute()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#ff9500" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+          </button>
+          <button class="ft-btn ft-more" title="More">
+            <svg viewBox="0 0 24 24" fill="white"><circle cx="6" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="18" cy="12" r="1.8"/></svg>
+          </button>
+          <button class="ft-btn ft-end" title="End" onclick="closeWindow('win-facetime')">
+            <svg viewBox="0 0 24 24" fill="white" stroke="none"><path d="M12 9c-1.6 0-3.15.25-4.6.72v2.12c0 .5-.2.97-.54 1.3L4.64 15.38c-.18.18-.43.28-.7.28-.27 0-.52-.1-.7-.28L.76 12.9a1.01 1.01 0 0 1 0-1.42C3.7 8.53 7.63 7 12 7s8.3 1.53 11.24 4.48c.39.39.39 1.03 0 1.42l-2.48 2.48c-.18.18-.43.28-.71.28-.27 0-.52-.1-.7-.28l-2.22-2.24c-.34-.33-.54-.8-.54-1.3V9.72A14.9 14.9 0 0 0 12 9z"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="resize-handle" data-window="win-facetime"></div>
+      <div class="resize-handle-right" data-window="win-facetime"></div>
+      <div class="resize-handle-bottom" data-window="win-facetime"></div>
+      <div class="resize-handle-left" data-window="win-facetime"></div>
+    </div>
+
+    <!-- Dock -->
+    <div id="dock">
+      <div class="dock-item" data-app="finder" onclick="openWindow('win-finder')">
+        <div class="tooltip">Finder</div>
+        <div class="dock-icon-wrapper"><img src="public/background/icons apps/finder.png" alt="Finder" /></div>
+        <div class="dot" id="dot-finder"></div>
+      </div>
+      <div class="dock-item" data-app="notes" onclick="openWindow('win-notes')">
+        <div class="tooltip">Notes</div>
+        <div class="dock-icon-wrapper"><img src="public/background/icons apps/notes.png" alt="Notes" /></div>
+        <div class="dot" id="dot-notes"></div>
+      </div>
+      <div class="dock-item" data-app="messages" onclick="openWindow('win-messages')">
+        <div class="tooltip">Messages</div>
+        <div class="dock-icon-wrapper"><img src="public/background/icons apps/messages.png" alt="Messages" /></div>
+        <div class="dot" id="dot-messages"></div>
+      </div>
+      <div class="dock-item" data-app="photos" onclick="openWindow('win-photos')">
+        <div class="tooltip">Photos</div>
+        <div class="dock-icon-wrapper"><img src="public/background/icons apps/photos.png" alt="Photos" /></div>
+        <div class="dot" id="dot-photos"></div>
+      </div>
+      <div class="dock-item" data-app="facetime" onclick="openWindow('win-facetime')">
+        <div class="tooltip">FaceTime</div>
+        <div class="dock-icon-wrapper"><img src="public/background/icons apps/facetime.png" alt="FaceTime" /></div>
+        <div class="dot" id="dot-facetime"></div>
+      </div>
+      <div class="dock-item" data-app="contact" onclick="openWindow('win-contact')">
+        <div class="tooltip">Contacts</div>
+        <div class="dock-icon-wrapper"><img src="public/background/icons apps/contacts.png" alt="Contacts" /></div>
+        <div class="dot" id="dot-contact"></div>
+      </div>
+      <div class="dock-separator"></div>
+      <div class="dock-item" data-app="trash" onclick="openFinderToTrash()">
+        <div class="tooltip">Trash</div>
+        <div class="dock-icon-wrapper"><img src="public/background/icons apps/trashcan.png" alt="Trash" /></div>
+        <div class="dot"></div>
+      </div>
+    </div>
+  </div>
+
+<script src="photos_data.js"></script>
+<script>
+// =====================================================================
+// DATA
+// =====================================================================
+
+const NOTES_DATA = [
+  {
+    id: "about-me", emoji: "📌", title: "about me", date: "2/13/2026",
+    preview: "my name is alana (rhymes with...",
+    section: "pinned", dateLabel: "February 13, 2026 at 8:00 AM",
+    content: `<h1>📌 about me</h1>
+<p>my name is alana (rhymes with "banana")</p>
+<h2>currently</h2>
+<ul>
+  <li>founder &amp; managing partner of <a href="#">basecase capital</a></li>
+  <li>partner to a number of incredible companies, including <a href="#">ashby</a>, <a href="#">astral</a>, <a href="#">baseten</a>, <a href="#">braintrust</a>, <a href="#">browserbase</a>, <a href="#">default</a>, <a href="#">graphite</a>, <a href="#">orb</a>, <a href="#">paper</a>, <a href="#">resend</a>, <a href="#">supabase</a>, <a href="#">vercel</a>, <a href="#">windsurf</a> &amp; others</li>
+  <li>builder &amp; maintainer of a few open-source projects, including <a href="#">ghostbusters</a>, <a href="#">lexiconic</a>, <a href="#">booklist</a>, &amp; <a href="#">others</a></li>
+  <li>wife &amp; partner in crime to <a href="#">ankur goyal</a></li>
+</ul>
+<h2>previously</h2>
+<ul>
+  <li>joined <a href="#">samsara</a> as a product manager in 2019</li>
+  <li>worked on data platform, reports infra, alerts &amp; automations, &amp; admin tooling with some <a href="#">very incredible engineers</a></li>
+  <li>interned at <a href="#">greylock</a> and was lucky enough to help out with their incubation of <a href="#">abnormal security</a></li>
+  <li>launched the <a href="#">home equity platform at blend</a></li>
+  <li>shipped the first <a href="#">free trial at appdynamics</a></li>
+  <li>interned on the research &amp; development team at <a href="#">natera</a></li>
+  <li>studied computer science at <a href="#">columbia university</a> and made some <a href="#">life long friends</a></li>
+</ul>`
+  },
+  {
+    id: "quick-links", emoji: "🔗", title: "quick links", date: "2/13/2026",
+    preview: "email inbox zero, i respond to eve...",
+    section: "pinned", dateLabel: "February 13, 2026 at 9:00 AM",
+    content: `<h1>🔗 quick links</h1>
+<p>email inbox zero, i respond to every email</p>
+<h2>connect</h2>
+<ul>
+  <li><a href="#">email</a> - the best way to reach me</li>
+  <li><a href="#">twitter / x</a> - where i share thoughts</li>
+  <li><a href="#">linkedin</a> - professional profile</li>
+  <li><a href="#">github</a> - open source projects</li>
+</ul>
+<h2>writing</h2>
+<ul>
+  <li><a href="#">blog</a> - long form essays</li>
+  <li><a href="#">newsletter</a> - monthly updates</li>
+</ul>`
+  },
+  {
+    id: "how-this-works", emoji: "⚙️", title: "how this works", date: "11/22/2025",
+    preview: "implementation the app uses the...",
+    section: "pinned", dateLabel: "November 22, 2025 at 3:26 PM",
+    content: `<h1>⚙️ how this works</h1>
+<h2>implementation</h2>
+<ul>
+  <li>the app uses the <a href="#">next.js</a> app router and is hosted on <a href="#">vercel</a></li>
+  <li>the notes and note metadata are stored in <a href="#">supabase</a></li>
+  <li>the notes are <a href="#">statically generated</a> and get revalidated when new notes are created or updated</li>
+  <li>the note content is stored in markdown and rendered with <a href="#">react markdown</a></li>
+  <li><a href="#">supabase rls</a> policies are set up so that anyone can view public notes and create private notes</li>
+  <li>new private notes get stored in supabase with a session_id based on local storage</li>
+  <li>users can view, edit, &amp; delete their own private notes and share the link with others to view</li>
+  <li>a <a href="#">pg_cron</a> job runs every day to delete empty notes that are over 12 hours old</li>
+  <li>the swipe gestures to pin/unpin, edit, &amp; delete notes on mobile are implemented with <a href="#">react swipeable</a></li>
+  <li>the keyboard shortcuts are inspired by vim and the command menu uses <a href="#">shadcn/ui command</a></li>
+  <li>the og images are <a href="#">generated dynamically</a> with the note's title &amp; emoji</li>
+  <li>it's fully open-source and available on <a href="#">github</a>, so feel free to fork it or submit a pull request!</li>
+</ul>
+<h2>gratitude</h2>
+<ul>
+  <li><a href="#">john pham</a> for tons of feedback on speed &amp; accessibility</li>
+  <li><a href="#">eden halperin</a> for incredible feedback on ui/ux</li>
+  <li><a href="#">guillermo rauch</a> &amp; <a href="#">grace yun</a> for help with the og image</li>
+  <li><a href="#">andrew smith</a> &amp; <a href="#">terry sutton</a> for help with supabase ssr</li>
+  <li><a href="#">david lorenz</a> for help with supabase rls</li>
+</ul>`
+  },
+  {
+    id: "principles", emoji: "📋", title: "principles", date: "2/13/2026",
+    preview: "act with urgency do what you say...",
+    section: "today", dateLabel: "February 13, 2026 at 10:00 AM",
+    content: `<h1>📋 principles</h1>
+<ul>
+  <li>act with urgency</li>
+  <li>do what you say you're going to do</li>
+  <li>be direct and honest</li>
+  <li>think from first principles</li>
+  <li>stay curious, keep learning</li>
+  <li>focus on what matters</li>
+  <li>build things that last</li>
+  <li>surround yourself with great people</li>
+</ul>`
+  },
+  {
+    id: "bookmarks", emoji: "📚", title: "bookmarks", date: "2/13/2026",
+    preview: '"happiness comes from balance,...',
+    section: "today", dateLabel: "February 13, 2026 at 11:00 AM",
+    content: `<h1>📚 bookmarks</h1>
+<p>"happiness comes from balance, not from intensity"</p>
+<h2>articles</h2>
+<ul>
+  <li><a href="#">how to do great work</a> - paul graham</li>
+  <li><a href="#">the age of the essay</a> - paul graham</li>
+  <li><a href="#">a guide to the good life</a> - william irvine</li>
+</ul>
+<h2>books</h2>
+<ul>
+  <li>shoe dog - phil knight</li>
+  <li>the hard thing about hard things - ben horowitz</li>
+  <li>zero to one - peter thiel</li>
+  <li>the effective executive - peter drucker</li>
+</ul>`
+  },
+  {
+    id: "on-repeat", emoji: "🎵", title: "on repeat", date: "2/12/2026",
+    preview: "electronic / house lane 8 mixtapes...",
+    section: "yesterday", dateLabel: "February 12, 2026 at 3:00 PM",
+    content: `<h1>🎵 on repeat</h1>
+<p>electronic / house lane 8 mixtapes, melodic techno, deep house</p>
+<h2>artists</h2>
+<ul>
+  <li>lane 8</li>
+  <li>ben böhmer</li>
+  <li>rufüs du sol</li>
+  <li>odesza</li>
+  <li>fred again..</li>
+  <li>bonobo</li>
+</ul>
+<h2>playlists</h2>
+<ul>
+  <li><a href="#">deep focus</a></li>
+  <li><a href="#">coding flow</a></li>
+  <li><a href="#">sunday morning</a></li>
+</ul>`
+  },
+  {
+    id: "reading-list", emoji: "📖", title: "reading list", date: "2/12/2026",
+    preview: "a regularly updated log of the...",
+    section: "yesterday", dateLabel: "February 12, 2026 at 2:00 PM",
+    content: `<h1>📖 reading list</h1>
+<p>a regularly updated log of the books i'm reading and have read</p>
+<h2>currently reading</h2>
+<ul>
+  <li>the beginning of infinity - david deutsch</li>
+  <li>thinking in systems - donella meadows</li>
+</ul>
+<h2>recently finished</h2>
+<ul>
+  <li>the dream machine - m. mitchell waldrop</li>
+  <li>chip war - chris miller</li>
+  <li>the man from the future - ananyo bhattacharya</li>
+  <li>elon musk - walter isaacson</li>
+</ul>`
+  },
+  {
+    id: "who-is-tonchi", emoji: "🩷", title: "who is tonchi?", date: "2/13/2026",
+    preview: "tonchi is the most amazing person...",
+    section: "pinned", dateLabel: "February 13, 2026 at 12:00 AM",
+    content: `<h1>🩷 who is tonchi?</h1>
+<p>tonchi is the most amazing person in the world</p>
+<h2>about her</h2>
+<ul>
+  <li>her real name is victoria but everyone calls her tonchi</li>
+  <li>she's kind, smart, and the best company</li>
+  <li>she makes everything better just by being there</li>
+  <li>she's the reason this website exists</li>
+</ul>
+<h2>fun facts</h2>
+<ul>
+  <li>always has the best music taste</li>
+  <li>the best conversations happen with her</li>
+  <li>she's my favorite person in the entire world</li>
+</ul>
+<p><em>happy san valentin, tonchi 🩷</em></p>`
+  },
+  {
+    id: "favorite-music", emoji: "🎶", title: "favorite music", date: "2/13/2026",
+    preview: "the songs that remind me of us...",
+    section: "pinned", dateLabel: "February 13, 2026 at 12:30 AM",
+    content: `<h1>🎶 favorite music</h1>
+<p>the songs that remind me of us</p>
+<h2>our songs</h2>
+<ul>
+  <li>add your songs here...</li>
+</ul>
+<h2>artists we love</h2>
+<ul>
+  <li>add your artists here...</li>
+</ul>
+<p><em>every song sounds better with you 🎵</em></p>`
+  }
+];
+
+const CONVERSATIONS_DATA = {
+  mm: {
+    name: "Max Matta",
+    avatarInitials: "MM", avatarColor: "linear-gradient(135deg,#5fc3e4,#3a7bd5)",
+    listName: "Max Matta", listPreview: "dale hermano nos vemos alla", time: "Today",
+    messages: [
+      { type: "received", sender: "Max Matta", text: "ey que onda para hoy?" },
+      { type: "sent", text: "todo bien, estaba pensando en ir a comer algo" },
+      { type: "received", sender: "Max Matta", text: "dale yo me sumo" },
+      { type: "sent", text: "joya, te aviso cuando salga" },
+      { type: "received", sender: "Max Matta", text: "dale hermano nos vemos alla", status: "Read" }
+    ]
+  },
+  natochi: {
+    name: "Natochi",
+    avatarInitials: "N", avatarColor: "linear-gradient(135deg,#fd79a8,#e84393)",
+    listName: "Natochi", listPreview: "te quiero mucho 🩷", time: "Today",
+    messages: [
+      { type: "sent", text: "hola tonchi" },
+      { type: "received", sender: "Natochi", text: "hola mi amor 🩷" },
+      { type: "sent", text: "como estas?" },
+      { type: "received", sender: "Natochi", text: "bien y vos?" },
+      { type: "sent", text: "bien, pensando en vos" },
+      { type: "received", sender: "Natochi", text: "ay que lindo" },
+      { type: "sent", text: "te quiero mucho 🩷", status: "Read" }
+    ]
+  },
+  mom: {
+    name: "Mom",
+    avatarInitials: "M", avatarColor: "linear-gradient(135deg,#f5af19,#f12711)",
+    listName: "Mom", listPreview: "cuidate mucho hijo 💕", time: "Yesterday",
+    messages: [
+      { type: "received", sender: "Mom", text: "hijo como estas?" },
+      { type: "sent", text: "bien ma, todo tranqui" },
+      { type: "received", sender: "Mom", text: "que bueno, comiste?" },
+      { type: "sent", text: "si ma jajaja" },
+      { type: "received", sender: "Mom", text: "cuidate mucho hijo 💕" },
+      { type: "sent", text: "te quiero ma ❤️", status: "Read" }
+    ]
+  },
+  dad: {
+    name: "Dad",
+    avatarInitials: "D", avatarColor: "linear-gradient(135deg,#11998e,#38ef7d)",
+    listName: "Dad", listPreview: "abrazo grande hijo", time: "Yesterday",
+    messages: [
+      { type: "received", sender: "Dad", text: "como va todo?" },
+      { type: "sent", text: "todo bien pa, laburando" },
+      { type: "received", sender: "Dad", text: "bien bien, seguile metiendo" },
+      { type: "sent", text: "gracias pa" },
+      { type: "received", sender: "Dad", text: "abrazo grande hijo" },
+      { type: "sent", text: "abrazo! 🫂", status: "Read" }
+    ]
+  },
+  vandie: {
+    name: "Vandie",
+    avatarInitials: "V", avatarColor: "linear-gradient(135deg,#6c5ce7,#a29bfe)",
+    listName: "Vandie", listPreview: "jajajaja dale dale", time: "Yesterday",
+    messages: [
+      { type: "sent", text: "vandieee" },
+      { type: "received", sender: "Vandie", text: "quee jajaja" },
+      { type: "sent", text: "vamos a hacer algo este finde?" },
+      { type: "received", sender: "Vandie", text: "sii dale, que se te ocurre?" },
+      { type: "sent", text: "no se, algo tranqui" },
+      { type: "received", sender: "Vandie", text: "jajajaja dale dale" },
+      { type: "sent", text: "😂", status: "Delivered" }
+    ]
+  },
+  colo: {
+    name: "Colo",
+    avatarInitials: "C", avatarColor: "linear-gradient(135deg,#e17055,#d63031)",
+    listName: "Colo", listPreview: "jajaja que crack", time: "Tuesday",
+    messages: [
+      { type: "sent", text: "colo!" },
+      { type: "received", sender: "Colo", text: "que onda hermano" },
+      { type: "sent", text: "todo bien vos?" },
+      { type: "received", sender: "Colo", text: "jajaja que crack" }
+    ]
+  },
+  gato: {
+    name: "Gato",
+    avatarInitials: "G", avatarColor: "linear-gradient(135deg,#fdcb6e,#e17055)",
+    listName: "Gato", listPreview: "nos vemos bro", time: "Monday",
+    messages: [
+      { type: "received", sender: "Gato", text: "ey que hacemos hoy" },
+      { type: "sent", text: "nada planeado" },
+      { type: "received", sender: "Gato", text: "nos vemos bro" }
+    ]
+  },
+  mayumi: {
+    name: "Mayumi",
+    avatarInitials: "MY", avatarColor: "linear-gradient(135deg,#55efc4,#00b894)",
+    listName: "Mayumi", listPreview: "dale perfecto!", time: "Monday",
+    messages: [
+      { type: "sent", text: "hola mayumi!" },
+      { type: "received", sender: "Mayumi", text: "holaa como estas?" },
+      { type: "sent", text: "bien! te queria preguntar algo" },
+      { type: "received", sender: "Mayumi", text: "dale perfecto!" }
+    ]
+  }
+};
+
+// =====================================================================
+// PHOTOS DATA
+// Photos are loaded from: public/background/photos/
+// Name your photos: 1.jpg, 2.jpg, 3.jpg, ... (up to 30)
+// To add more, just add more entries below.
+// To organize by collection, add photo numbers to the collection arrays.
+// =====================================================================
+const PHOTO_PATH = "public/background/photos/";
+const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+// PHOTOS_DATA is built from PHOTOS_RAW_DATA (generated by generate_photos.py → photos_data.js)
+let PHOTOS_DATA = {
+  library:   { title: "Library",   dateRange: "", photos: [] },
+  favorites: { title: "Favorites", dateRange: "", photos: [] },
+  flowers:   { title: "Flowers",   dateRange: "", photos: [] },
+  food:      { title: "Food",      dateRange: "", photos: [] },
+  friends:   { title: "Friends",   dateRange: "", photos: [] }
+};
+
+function buildPhotosData() {
+  if (typeof PHOTOS_RAW_DATA === "undefined") return;
+  const allPhotos = PHOTOS_RAW_DATA.map((p, i) => {
+    const d = new Date(p.date);
+    const month = MONTH_NAMES[d.getMonth()];
+    const year = String(d.getFullYear());
+    return {
+      id: i + 1,
+      month: `${month} ${year}`,
+      year: year,
+      url: PHOTO_PATH + p.file,
+      date: p.date,
+      geo: p.geo || null,
+      categories: p.categories || []
+    };
+  });
+
+  const fmt = d => `${MONTH_NAMES[d.getMonth()].slice(0,3)} ${d.getDate()}, ${d.getFullYear()}`;
+
+  function buildCollection(title, photos) {
+    let dateRange = "";
+    if (photos.length > 0) {
+      const first = new Date(photos[0].date);
+      const last = new Date(photos[photos.length - 1].date);
+      dateRange = `${fmt(first)} – ${fmt(last)}`;
+    }
+    return { title, dateRange, photos };
+  }
+
+  PHOTOS_DATA.library = buildCollection("Library", allPhotos);
+  PHOTOS_DATA.favorites = buildCollection("Favorites", allPhotos.filter(p => p.categories.includes("favorites")));
+  PHOTOS_DATA.flowers = buildCollection("Flowers", allPhotos.filter(p => p.categories.includes("flowers")));
+  PHOTOS_DATA.food = buildCollection("Food", allPhotos.filter(p => p.categories.includes("food")));
+  PHOTOS_DATA.friends = buildCollection("Friends", allPhotos.filter(p => p.categories.includes("friends")));
+}
+
+// =====================================================================
+// STATE
+// =====================================================================
+let highestZ = 103;
+const windowStates = {};
+let currentNote = "about-me";
+let currentConv = "mm";
+let currentPhotoCollection = "library";
+let currentPhotoView = "all"; // "years", "months", "all"
+let viewerPhotos = [];
+let viewerIndex = 0;
+
+// =====================================================================
+// INIT
+// =====================================================================
+document.addEventListener("DOMContentLoaded", () => {
+  updateClock(); setInterval(updateClock, 30000);
+  buildPhotosData();
+  initWindows();
+  initDock();
+  renderNotes();
+  renderMessages();
+  renderPhotos();
+  openWindow("win-notes");
+});
+
+// =====================================================================
+// CLOCK & CALENDAR
+// =====================================================================
+function updateClock() {
+  const now = new Date();
+  const days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const h = now.getHours(), m = now.getMinutes().toString().padStart(2,"0");
+  const ampm = h >= 12 ? "PM" : "AM", h12 = h % 12 || 12;
+  document.getElementById("menubar-time").textContent =
+    `${days[now.getDay()]} ${months[now.getMonth()]} ${now.getDate()}  ${h12}:${m} ${ampm}`;
+}
+
+// =====================================================================
+// NOTES APP
+// =====================================================================
+function renderNotes() {
+  const sidebar = document.getElementById("notes-sidebar");
+  const sections = { pinned: "Pinned", today: "Today", yesterday: "Yesterday" };
+  let html = `<div class="search-wrapper"><input type="text" placeholder="Search" id="notes-search" oninput="filterNotes()" /></div>`;
+  for (const [key, label] of Object.entries(sections)) {
+    const notes = NOTES_DATA.filter(n => n.section === key);
+    if (!notes.length) continue;
+    const isPlain = key !== "pinned";
+    html += `<div class="sidebar-section" data-section="${key}">`;
+    html += `<div class="sidebar-section-title${isPlain ? ' plain' : ''}">${label}</div>`;
+    notes.forEach(n => {
+      html += `<div class="note-item${n.id === currentNote ? ' selected' : ''}" data-note="${n.id}" onclick="selectNote('${n.id}')">
+        <div class="note-title">${n.emoji} ${n.title}</div>
+        <div class="note-meta"><span>${n.date}</span><span class="note-preview">${n.preview}</span></div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+  sidebar.innerHTML = html;
+  renderNoteContent();
+}
+
+function renderNoteContent() {
+  const note = NOTES_DATA.find(n => n.id === currentNote);
+  if (!note) return;
+  document.getElementById("notes-content").innerHTML =
+    `<div class="notes-content"><div class="note-date">${note.dateLabel}</div>${note.content}</div>`;
+}
+
+function selectNote(id) {
+  currentNote = id;
+  document.querySelectorAll("#notes-sidebar .note-item").forEach(el => {
+    el.classList.toggle("selected", el.dataset.note === id);
+  });
+  renderNoteContent();
+}
+
+function filterNotes() {
+  const q = document.getElementById("notes-search").value.toLowerCase().trim();
+  document.querySelectorAll("#notes-sidebar .note-item").forEach(el => {
+    const note = NOTES_DATA.find(n => n.id === el.dataset.note);
+    if (!note) return;
+    const match = !q || note.title.toLowerCase().includes(q) ||
+                  note.preview.toLowerCase().includes(q) ||
+                  note.content.toLowerCase().includes(q);
+    el.classList.toggle("hidden", !match);
+  });
+  // Hide empty sections
+  document.querySelectorAll("#notes-sidebar .sidebar-section").forEach(sec => {
+    const visible = sec.querySelectorAll(".note-item:not(.hidden)");
+    sec.style.display = visible.length ? "" : "none";
+  });
+}
+
+// =====================================================================
+// MESSAGES APP
+// =====================================================================
+// Helper: get contact avatar for a conversation key
+function getConvAvatar(convKey, size) {
+  const contact = CONTACTS_DATA.find(c => c.convId === convKey);
+  if (contact && contact.avatar) {
+    return `<img src="${contact.avatar}" alt="${contact.name}" />`;
+  }
+  const c = CONVERSATIONS_DATA[convKey];
+  return c ? c.avatarInitials : '?';
+}
+
+function getConvAvatarStyle(convKey) {
+  const contact = CONTACTS_DATA.find(c => c.convId === convKey);
+  if (contact && contact.avatar) return '';
+  const c = CONVERSATIONS_DATA[convKey];
+  return c ? `background:${c.avatarColor};` : '';
+}
+
+function renderMessages() {
+  const sidebar = document.getElementById("messages-sidebar");
+  const convKeys = Object.keys(CONVERSATIONS_DATA);
+  const pinnedKeys = convKeys.slice(0, 3);
+
+  let html = `<div class="search-wrapper"><input type="text" placeholder="Search" id="messages-search" oninput="filterMessages()" /></div>`;
+  html += `<div class="pinned-contacts">`;
+  pinnedKeys.forEach(k => {
+    const c = CONVERSATIONS_DATA[k];
+    const avatarContent = getConvAvatar(k);
+    const avatarStyle = getConvAvatarStyle(k);
+    html += `<div class="pinned-contact" onclick="selectConversation('${k}')">
+      <div class="avatar" style="${avatarStyle}">${avatarContent}</div>
+      <div class="name">${c.listName.length > 10 ? c.listName.slice(0,9)+'...' : c.listName}</div>
+    </div>`;
+  });
+  html += `</div><div class="conversation-list">`;
+  convKeys.forEach(k => {
+    const c = CONVERSATIONS_DATA[k];
+    const avatarContent = getConvAvatar(k);
+    const avatarStyle = getConvAvatarStyle(k);
+    html += `<div class="conversation-item${k === currentConv ? ' selected' : ''}" data-conv="${k}" onclick="selectConversation('${k}')">
+      <div class="conv-avatar" style="${avatarStyle}">${avatarContent}</div>
+      <div class="conv-info">
+        <div class="conv-name">${c.listName}</div>
+        <div class="conv-preview">${c.listPreview}</div>
+      </div>
+      <div class="conv-time">${c.time}</div>
+    </div>`;
+  });
+  html += `</div>`;
+  sidebar.innerHTML = html;
+  renderChat();
+}
+
+function renderChat() {
+  const conv = CONVERSATIONS_DATA[currentConv];
+  if (!conv) return;
+  let html = `<div class="chat-header">To: <span>${conv.name}</span></div>`;
+  html += `<div class="chat-messages" onclick="dismissReactionBar(event)">`;
+  conv.messages.forEach((m, i) => {
+    const reactionBadge = m.reaction ? `<div class="message-reaction">${m.reaction}</div>` : '';
+    if (m.type === "sent") {
+      html += `<div class="message-wrapper sent" data-idx="${i}">
+        <div class="message-bubble sent" onclick="showReactionBar(${i}, event)">${m.text}</div>
+        ${reactionBadge}
+        ${m.status ? `<div class="message-status">${m.status}</div>` : ''}
+      </div>`;
+    } else {
+      html += `<div class="message-wrapper received" data-idx="${i}">
+        <div class="message-sender-name">${m.sender}</div>
+        <div class="message-bubble received" onclick="showReactionBar(${i}, event)">${m.text}</div>
+        ${reactionBadge}
+      </div>`;
+    }
+  });
+  html += `</div>`;
+  html += `<div class="chat-input-area">
+    <input type="text" id="chat-msg-input" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendMessage()" />
+    <button class="emoji-btn" onclick="toggleEmojiPicker(event)">😊</button>
+  </div>`;
+  document.getElementById("messages-chat").innerHTML = html;
+  const msgs = document.querySelector("#messages-chat .chat-messages");
+  if (msgs) msgs.scrollTop = msgs.scrollHeight;
+}
+
+function sendMessage() {
+  const input = document.getElementById("chat-msg-input");
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text) return;
+  const conv = CONVERSATIONS_DATA[currentConv];
+  conv.messages.push({ type: "sent", text, status: "Delivered" });
+  conv.listPreview = text;
+  renderChat();
+  renderMessages();
+}
+
+// =====================================================================
+// EMOJI PICKER
+// =====================================================================
+let emojiPickerOpen = false;
+
+const EMOJI_SETS = {
+  "Smileys": ["😀","😃","😄","😁","😆","😅","🤣","😂","🙂","😊","😇","😍","🥰","😘","😗","😚","😋","😛","😜","🤪","😝","🤗","🤭","🤫","🤔","🤐","🤨","😐","😑","😶","😏","😒","🙄","😬","😮‍💨","🤥","😌","😔","😪","🤤","😴","😷","🤒","🤕","🤢","🤮","🥴","😵","🤯","🥳","🥸","😎","🤓","🧐"],
+  "Hearts": ["❤️","🧡","💛","💚","💙","💜","🖤","🤍","🤎","💔","❤️‍🔥","❤️‍🩹","💕","💞","💓","💗","💖","💘","💝","🩷","🩵","🩶"],
+  "Hands": ["👍","👎","👊","✊","🤛","🤜","👏","🙌","🫶","👐","🤲","🤝","🙏","✌️","🤞","🫰","🤟","🤘","🤙","👈","👉","👆","👇","☝️","✋","🤚","🖐","🖖","👋","🤏"],
+  "Animals": ["🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐻‍❄️","🐨","🐯","🦁","🐮","🐷","🐸","🐵","🐔","🐧","🐦","🦅","🦆","🦉","🦇","🐺","🐴","🦄","🐝","🐛","🦋","🐌","🐞"],
+  "Food": ["🍎","🍐","🍊","🍋","🍌","🍉","🍇","🍓","🫐","🍈","🍒","🍑","🥭","🍍","🥥","🥝","🍅","🍆","🥑","🥦","🥬","🌶️","🫑","🌽","🥕","🧄","🧅","🥔","🍠","🥐","🥯","🍞","🧀","🍖","🍗","🥩","🍔","🍟","🍕","🌭","🥪","🌮","🌯","🫔","🥗"]
+};
+
+function toggleEmojiPicker(e) {
+  e.stopPropagation();
+  const existing = document.getElementById("emoji-picker");
+  if (existing) { existing.remove(); emojiPickerOpen = false; return; }
+  emojiPickerOpen = true;
+
+  const picker = document.createElement("div");
+  picker.id = "emoji-picker";
+  picker.onclick = (ev) => ev.stopPropagation();
+
+  let html = '<div class="emoji-picker-tabs">';
+  const cats = Object.keys(EMOJI_SETS);
+  cats.forEach((cat, i) => {
+    html += `<span class="emoji-tab${i === 0 ? ' active' : ''}" onclick="switchEmojiTab('${cat}', this)">${EMOJI_SETS[cat][0]}</span>`;
+  });
+  html += '</div><div class="emoji-picker-search"><input type="text" placeholder="Search" oninput="filterEmojis(this.value)" /></div>';
+  html += '<div class="emoji-picker-grid" id="emoji-grid">';
+  cats.forEach(cat => {
+    html += `<div class="emoji-cat-section" data-cat="${cat}"><div class="emoji-cat-label">${cat}</div><div class="emoji-cat-grid">`;
+    EMOJI_SETS[cat].forEach(e => {
+      html += `<span class="emoji-item" onclick="insertEmoji('${e}')">${e}</span>`;
+    });
+    html += '</div></div>';
+  });
+  html += '</div>';
+  picker.innerHTML = html;
+
+  const chatArea = document.getElementById("messages-chat");
+  chatArea.appendChild(picker);
+}
+
+function switchEmojiTab(cat, tabEl) {
+  document.querySelectorAll(".emoji-tab").forEach(t => t.classList.remove("active"));
+  tabEl.classList.add("active");
+  const section = document.querySelector(`.emoji-cat-section[data-cat="${cat}"]`);
+  if (section) section.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function filterEmojis(q) {
+  // Simple: show/hide entire categories (no emoji name DB, just toggle visibility)
+  document.querySelectorAll(".emoji-cat-section").forEach(s => s.style.display = "");
+}
+
+function insertEmoji(emoji) {
+  const input = document.getElementById("chat-msg-input");
+  if (input) { input.value += emoji; input.focus(); }
+}
+
+function closeEmojiPicker() {
+  const p = document.getElementById("emoji-picker");
+  if (p) { p.remove(); emojiPickerOpen = false; }
+}
+
+// =====================================================================
+// MESSAGE REACTIONS
+// =====================================================================
+let activeReactionIdx = -1;
+
+const REACTION_ICONS = [
+  { emoji: "❤️", label: "heart" },
+  { emoji: "👍", label: "thumbs up" },
+  { emoji: "👎", label: "thumbs down" },
+  { emoji: "😂", label: "haha" },
+  { emoji: "‼️", label: "emphasis" },
+  { emoji: "❓", label: "question" }
+];
+
+function showReactionBar(idx, e) {
+  e.stopPropagation();
+  dismissReactionBar();
+  activeReactionIdx = idx;
+
+  const bubble = e.currentTarget;
+  const wrapper = bubble.closest(".message-wrapper");
+  if (!wrapper) return;
+
+  const bar = document.createElement("div");
+  bar.className = "reaction-bar";
+  bar.onclick = (ev) => ev.stopPropagation();
+  REACTION_ICONS.forEach(r => {
+    bar.innerHTML += `<span class="reaction-option" onclick="addReaction(${idx}, '${r.emoji}')" title="${r.label}">${r.emoji}</span>`;
+  });
+  wrapper.style.position = "relative";
+  wrapper.appendChild(bar);
+}
+
+function addReaction(idx, emoji) {
+  const conv = CONVERSATIONS_DATA[currentConv];
+  if (!conv || !conv.messages[idx]) return;
+  const msg = conv.messages[idx];
+  msg.reaction = msg.reaction === emoji ? null : emoji;
+  dismissReactionBar();
+  renderChat();
+}
+
+function dismissReactionBar(e) {
+  if (e && e.target.closest(".reaction-bar")) return;
+  document.querySelectorAll(".reaction-bar").forEach(b => b.remove());
+  activeReactionIdx = -1;
+}
+
+function selectConversation(key) {
+  currentConv = key;
+  document.querySelectorAll("#messages-sidebar .conversation-item").forEach(el => {
+    el.classList.toggle("selected", el.dataset.conv === key);
+  });
+  renderChat();
+}
+
+function filterMessages() {
+  const q = document.getElementById("messages-search").value.toLowerCase().trim();
+  document.querySelectorAll("#messages-sidebar .conversation-item").forEach(el => {
+    const conv = CONVERSATIONS_DATA[el.dataset.conv];
+    if (!conv) return;
+    const searchText = (conv.name + " " + conv.listPreview + " " +
+      conv.messages.map(m => m.text).join(" ")).toLowerCase();
+    el.classList.toggle("hidden", q && !searchText.includes(q));
+  });
+}
+
+// =====================================================================
+// PHOTOS APP
+// =====================================================================
+function renderPhotos() {
+  renderPhotosSidebar();
+  renderPhotosContent();
+}
+
+function renderPhotosSidebar() {
+  const sidebar = document.getElementById("photos-sidebar");
+  const items = [
+    { key: "library", icon: "🖼", label: "Library" },
+    { key: "favorites", icon: "❤️", label: "Favorites" }
+  ];
+  const collections = [
+    { key: "flowers", icon: "📁", label: "Flowers" },
+    { key: "food", icon: "📁", label: "Food" },
+    { key: "friends", icon: "📁", label: "Friends" }
+  ];
+
+  let html = `<div style="padding:12px 0;">
+    <div class="sidebar-section-title">Library</div>`;
+  items.forEach(i => {
+    html += `<div class="sidebar-item${i.key === currentPhotoCollection ? ' selected' : ''}"
+      data-collection="${i.key}" onclick="selectPhotoCollection('${i.key}')">
+      <span class="icon">${i.icon}</span> ${i.label}</div>`;
+  });
+  html += `</div><div style="padding:4px 0;"><div class="sidebar-section-title">Collections</div>`;
+  collections.forEach(c => {
+    html += `<div class="sidebar-item${c.key === currentPhotoCollection ? ' selected' : ''}"
+      data-collection="${c.key}" onclick="selectPhotoCollection('${c.key}')">
+      <span class="icon">${c.icon}</span> ${c.label}</div>`;
+  });
+  html += `</div>`;
+  sidebar.innerHTML = html;
+}
+
+function renderPhotosContent() {
+  const container = document.getElementById("photos-content");
+  const data = PHOTOS_DATA[currentPhotoCollection];
+  if (!data) return;
+
+  let html = `<div class="photos-content"><div class="photos-header">
+    <h1>${data.title}</h1><div class="date-range">${data.dateRange}</div>
+    <div class="photos-toolbar">
+      <span class="${currentPhotoView==='years'?'active':''}" onclick="setPhotoView('years')">Years</span>
+      <span class="${currentPhotoView==='months'?'active':''}" onclick="setPhotoView('months')">Months</span>
+      <span class="${currentPhotoView==='all'?'active':''}" onclick="setPhotoView('all')">All Photos</span>
+    </div></div>`;
+
+  if (currentPhotoView === "all") {
+    html += `<div class="photo-grid">`;
+    data.photos.forEach((p, i) => {
+      html += `<div class="photo-item" onclick="openPhotoViewer('${currentPhotoCollection}', ${i})">
+        <img src="${p.url}" alt="Photo" loading="lazy" /></div>`;
+    });
+    html += `</div>`;
+  } else if (currentPhotoView === "months") {
+    const grouped = {};
+    data.photos.forEach((p, i) => {
+      if (!grouped[p.month]) grouped[p.month] = [];
+      grouped[p.month].push({ ...p, globalIdx: i });
+    });
+    for (const [month, photos] of Object.entries(grouped)) {
+      html += `<div class="photo-month-header">${month}</div><div class="photo-grid">`;
+      photos.forEach(p => {
+        html += `<div class="photo-item" onclick="openPhotoViewer('${currentPhotoCollection}', ${p.globalIdx})">
+          <img src="${p.url}" alt="Photo" loading="lazy" /></div>`;
+      });
+      html += `</div>`;
+    }
+  } else if (currentPhotoView === "years") {
+    const grouped = {};
+    data.photos.forEach((p, i) => {
+      if (!grouped[p.year]) grouped[p.year] = [];
+      grouped[p.year].push({ ...p, globalIdx: i });
+    });
+    for (const [year, photos] of Object.entries(grouped)) {
+      html += `<div class="photo-year-header">${year}</div><div class="photo-year-grid">`;
+      photos.forEach(p => {
+        html += `<div class="photo-year-item" onclick="openPhotoViewer('${currentPhotoCollection}', ${p.globalIdx})">
+          <img src="${p.url}" alt="Photo" loading="lazy" />
+          <div class="year-label">${p.month}</div></div>`;
+      });
+      html += `</div>`;
+    }
+  }
+
+  html += `</div>`;
+  container.innerHTML = html;
+}
+
+function selectPhotoCollection(key) {
+  currentPhotoCollection = key;
+  renderPhotosSidebar();
+  renderPhotosContent();
+}
+
+function setPhotoView(view) {
+  currentPhotoView = view;
+  renderPhotosContent();
+}
+
+// =====================================================================
+// PHOTO VIEWER (inline in Photos window)
+// =====================================================================
+let viewingPhoto = false;
+
+function openPhotoViewer(collection, index) {
+  const data = PHOTOS_DATA[collection];
+  if (!data) return;
+  viewerPhotos = data.photos;
+  viewerIndex = index;
+  viewingPhoto = true;
+  renderPhotoViewer();
+}
+
+function closePhotoViewer() {
+  viewingPhoto = false;
+  renderPhotosContent();
+}
+
+function viewerNav(dir) {
+  viewerIndex = (viewerIndex + dir + viewerPhotos.length) % viewerPhotos.length;
+  renderPhotoViewer();
+}
+
+function renderPhotoViewer() {
+  const container = document.getElementById("photos-content");
+  const photo = viewerPhotos[viewerIndex];
+  if (!photo) return;
+  // Use the actual EXIF date
+  const d = new Date(photo.date);
+  const monthName = MONTH_NAMES[d.getMonth()];
+  const day = d.getDate();
+  const year = d.getFullYear();
+  let hour = d.getHours();
+  const ampm = hour >= 12 ? "PM" : "AM";
+  hour = hour % 12 || 12;
+  const min = String(d.getMinutes()).padStart(2, "0");
+  const sec = String(d.getSeconds()).padStart(2, "0");
+  const dateStr = `${monthName} ${day}, ${year} at ${hour}:${min}:${sec} ${ampm}`;
+
+  container.innerHTML = `<div class="photo-viewer-inline">
+    <div class="photo-viewer-topbar">
+      <button class="viewer-back-btn" onclick="closePhotoViewer()">‹</button>
+      <div class="viewer-info">
+        <div class="viewer-date">${dateStr}</div>
+        <div class="viewer-counter">${viewerIndex + 1} of ${viewerPhotos.length}</div>
+      </div>
+      <button class="viewer-heart-btn">♡</button>
+    </div>
+    <div class="photo-viewer-body">
+      <button class="viewer-nav prev" onclick="viewerNav(-1)">‹</button>
+      <img src="${photo.url}" alt="Photo" />
+      <button class="viewer-nav next" onclick="viewerNav(1)">›</button>
+    </div>
+  </div>`;
+}
+
+// Keyboard navigation for viewer
+document.addEventListener("keydown", (e) => {
+  if (!viewingPhoto) return;
+  if (e.key === "Escape") closePhotoViewer();
+  if (e.key === "ArrowLeft") viewerNav(-1);
+  if (e.key === "ArrowRight") viewerNav(1);
+});
+
+// =====================================================================
+// WINDOW MANAGEMENT
+// =====================================================================
+function initWindows() {
+  document.querySelectorAll(".window").forEach(win => {
+    const id = win.id;
+    windowStates[id] = { prev: null, maximized: false, open: win.classList.contains("visible") };
+    updateDockDot(id, windowStates[id].open);
+    win.addEventListener("mousedown", () => bringToFront(id));
+    const titlebar = win.querySelector(".titlebar");
+    titlebar.addEventListener("mousedown", (e) => {
+      if (e.target.closest(".traffic-light")) return;
+      startDrag(e, win);
+    });
+    titlebar.addEventListener("dblclick", (e) => {
+      if (e.target.closest(".traffic-light")) return;
+      maximizeWindow(id);
+    });
+    win.querySelectorAll("[class^='resize-handle']").forEach(handle => {
+      handle.addEventListener("mousedown", (e) => { e.preventDefault(); e.stopPropagation(); startResize(e, win, handle); });
+    });
+  });
+}
+
+function bringToFront(id) {
+  highestZ++;
+  const win = document.getElementById(id);
+  win.style.zIndex = highestZ;
+  document.querySelectorAll(".window").forEach(w => w.classList.remove("active"));
+  win.classList.add("active");
+  const appNames = { "win-finder": "Finder", "win-notes": "Notes", "win-photos": "Photos", "win-messages": "Messages", "win-facetime": "FaceTime", "win-contact": "Contacts" };
+  document.getElementById("menubar-app-name").textContent = appNames[id] || "Finder";
+}
+
+function openWindow(id) {
+  const win = document.getElementById(id);
+  const state = windowStates[id];
+  const appKey = id.replace("win-", "");
+  const dockItem = document.querySelector(`.dock-item[data-app="${appKey}"]`);
+  if (dockItem && !state.open) {
+    dockItem.classList.add("bouncing");
+    setTimeout(() => dockItem.classList.remove("bouncing"), 600);
+  }
+  if (!state.open) { win.classList.add("visible"); state.open = true; updateDockDot(id, true); }
+  bringToFront(id);
+  if (id === "win-facetime") { startFacetimeWebcam(); playFacetimeVideo(); }
+}
+
+function closeWindow(id) {
+  const win = document.getElementById(id);
+  win.classList.remove("visible");
+  if (windowStates[id].maximized) {
+    document.getElementById("dock").classList.remove("dock-hidden");
+    history.pushState(null, "", "/");
+  }
+  windowStates[id].open = false; windowStates[id].maximized = false;
+  win.classList.remove("maximized");
+  updateDockDot(id, false);
+  document.getElementById("menubar-app-name").textContent = "Finder";
+  if (id === "win-facetime") { stopFacetimeWebcam(); pauseFacetimeVideo(); }
+}
+
+function minimizeWindow(id) {
+  const win = document.getElementById(id);
+  if (windowStates[id].maximized) {
+    document.getElementById("dock").classList.remove("dock-hidden");
+    windowStates[id].maximized = false;
+    win.classList.remove("maximized");
+    history.pushState(null, "", "/");
+  }
+  win.classList.add("minimizing");
+  setTimeout(() => { win.classList.remove("visible", "minimizing"); windowStates[id].open = false; }, 400);
+}
+
+const APP_URLS = { "win-finder": "/finder", "win-notes": "/notes", "win-photos": "/photos", "win-messages": "/messages", "win-facetime": "/facetime", "win-contact": "/contacts" };
+
+function maximizeWindow(id) {
+  const win = document.getElementById(id);
+  const state = windowStates[id];
+  const dock = document.getElementById("dock");
+  if (state.maximized) {
+    if (state.prev) { win.style.top = state.prev.top; win.style.left = state.prev.left; win.style.width = state.prev.width; win.style.height = state.prev.height; }
+    win.classList.remove("maximized"); state.maximized = false;
+    dock.classList.remove("dock-hidden");
+    history.pushState(null, "", "/");
+  } else {
+    state.prev = { top: win.style.top, left: win.style.left, width: win.style.width, height: win.style.height };
+    win.style.top = "25px"; win.style.left = "0px"; win.style.width = "100%";
+    win.style.height = `calc(100vh - 25px)`;
+    win.classList.add("maximized"); state.maximized = true;
+    dock.classList.add("dock-hidden");
+    const urlPath = APP_URLS[id] || "/";
+    history.pushState(null, "", urlPath);
+  }
+  bringToFront(id);
+}
+
+function updateDockDot(winId, visible) {
+  const appKey = winId.replace("win-", "");
+  const dot = document.getElementById(`dot-${appKey}`);
+  if (dot) dot.classList.toggle("visible", visible);
+}
+
+// =====================================================================
+// DRAGGING & RESIZING
+// =====================================================================
+function startDrag(e, win) {
+  if (windowStates[win.id]?.maximized) return;
+  const startX = e.clientX, startY = e.clientY;
+  const startLeft = win.offsetLeft, startTop = win.offsetTop;
+  document.body.classList.add("dragging");
+  function onMove(e) {
+    win.style.left = (startLeft + e.clientX - startX) + "px";
+    win.style.top = Math.max(25, startTop + e.clientY - startY) + "px";
+  }
+  function onUp() { document.body.classList.remove("dragging"); document.removeEventListener("mousemove", onMove); document.removeEventListener("mouseup", onUp); }
+  document.addEventListener("mousemove", onMove); document.addEventListener("mouseup", onUp);
+}
+
+function startResize(e, win, handle) {
+  const startX = e.clientX, startY = e.clientY;
+  const startW = win.offsetWidth, startH = win.offsetHeight;
+  const startLeft = win.offsetLeft, startTop = win.offsetTop;
+  const classes = handle.className;
+  const isRight = classes.includes("resize-handle-right") || classes === "resize-handle";
+  const isBottom = classes.includes("resize-handle-bottom") || classes === "resize-handle";
+  const isLeft = classes.includes("resize-handle-left");
+  document.body.classList.add("resizing");
+  function onMove(e) {
+    const dx = e.clientX - startX, dy = e.clientY - startY;
+    if (isRight) win.style.width = Math.max(400, startW + dx) + "px";
+    if (isBottom) win.style.height = Math.max(250, startH + dy) + "px";
+    if (isLeft) { const nw = Math.max(400, startW - dx); if (nw > 400) { win.style.width = nw + "px"; win.style.left = (startLeft + dx) + "px"; } }
+  }
+  function onUp() { document.body.classList.remove("resizing"); document.body.style.cursor = ""; document.removeEventListener("mousemove", onMove); document.removeEventListener("mouseup", onUp); }
+  document.addEventListener("mousemove", onMove); document.addEventListener("mouseup", onUp);
+}
+
+// =====================================================================
+// DOCK
+// =====================================================================
+function initDock() {
+  // Dock hover is handled by CSS only - no JS magnification needed
+}
+
+// =====================================================================
+// FACETIME — webcam + video
+// =====================================================================
+let facetimeWebcamStream = null;
+
+function startFacetimeWebcam() {
+  const webcamEl = document.getElementById("facetime-webcam");
+  if (!webcamEl || facetimeWebcamStream) return;
+  navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+    .then(stream => {
+      facetimeWebcamStream = stream;
+      webcamEl.srcObject = stream;
+    })
+    .catch(err => console.warn("Webcam not available:", err));
+}
+
+function stopFacetimeWebcam() {
+  if (facetimeWebcamStream) {
+    facetimeWebcamStream.getTracks().forEach(t => t.stop());
+    facetimeWebcamStream = null;
+    const webcamEl = document.getElementById("facetime-webcam");
+    if (webcamEl) webcamEl.srcObject = null;
+  }
+}
+
+function playFacetimeVideo() {
+  const vid = document.getElementById("facetime-video");
+  if (vid) vid.play().catch(() => {});
+}
+
+function pauseFacetimeVideo() {
+  const vid = document.getElementById("facetime-video");
+  if (vid) vid.pause();
+}
+
+// =====================================================================
+// FINDER APP
+// =====================================================================
+const FINDER_SIDEBAR_ITEMS = [
+  { section: "Favorites", items: [
+    { id: "recents",      icon: "🕐", label: "Recents" },
+    { id: "applications", icon: "⊞",  label: "Applications" },
+    { id: "desktop",      icon: "🖥", label: "Desktop" },
+    { id: "documents",    icon: "📄", label: "Documents" },
+    { id: "downloads",    icon: "⬇",  label: "Downloads" },
+    { id: "projects",     icon: "◇",  label: "Projects" },
+  ]},
+  { section: "Other", items: [
+    { id: "trash", icon: "🗑", label: "Trash" },
+  ]}
+];
+
+const FINDER_APPS = [
+  { name: "Notes",    icon: "public/background/icons apps/notes.png",    kind: "Application", date: "Feb 9, 2026", winId: "win-notes" },
+  { name: "Messages", icon: "public/background/icons apps/messages.png", kind: "Application", date: "Feb 8, 2026", winId: "win-messages" },
+  { name: "Photos",   icon: "public/background/icons apps/photos.png",   kind: "Application", date: "Feb 8, 2026", winId: "win-photos" },
+  { name: "FaceTime", icon: "public/background/icons apps/facetime.png", kind: "Application", date: "Feb 11, 2026", winId: "win-facetime" },
+  { name: "Contacts", icon: "public/background/icons apps/contacts.png", kind: "Application", date: "Feb 13, 2026", winId: "win-contact" },
+  { name: "Finder",   icon: "public/background/icons apps/finder.png",   kind: "Application", date: "Feb 13, 2026", winId: null },
+];
+
+const FINDER_DESKTOP_FILES = [
+  { name: "background.jpg", icon: null, kind: "JPEG Image", date: "Feb 12, 2026" },
+];
+
+const FINDER_DOCUMENTS_FILES = [
+  { name: "san valentin.txt", icon: null, kind: "Text Document", date: "Feb 13, 2026", content: "feliz san valentin, tonchi 🩷" },
+];
+
+const FINDER_PROJECTS_FILES = [
+  { name: "primer san valentin con ini", icon: null, kind: "Folder", date: "Feb 13, 2026" },
+];
+
+const FINDER_TRASH_FILES = [];
+
+let currentFinderSection = "recents";
+let selectedFinderRow = -1;
+
+function renderFinderSidebar() {
+  const sidebar = document.getElementById("finder-sidebar-el");
+  if (!sidebar) return;
+  let html = "";
+  FINDER_SIDEBAR_ITEMS.forEach(section => {
+    html += `<div class="finder-sidebar-section">`;
+    html += `<div class="finder-sidebar-label">${section.section}</div>`;
+    section.items.forEach(item => {
+      const sel = item.id === currentFinderSection ? " selected" : "";
+      html += `<div class="finder-sidebar-item${sel}" onclick="selectFinderSection('${item.id}')">
+        <span class="finder-sidebar-icon">${item.icon}</span>
+        <span>${item.label}</span>
+      </div>`;
+    });
+    html += `</div>`;
+  });
+  sidebar.innerHTML = html;
+}
+
+function getFinderFiles() {
+  switch (currentFinderSection) {
+    case "applications": return FINDER_APPS;
+    case "desktop": return FINDER_DESKTOP_FILES;
+    case "documents": return FINDER_DOCUMENTS_FILES;
+    case "downloads": return [];
+    case "projects": return FINDER_PROJECTS_FILES;
+    case "trash": return FINDER_TRASH_FILES;
+    case "recents":
+    default:
+      // Recents: combine all files from all sections
+      const all = [
+        ...FINDER_DOCUMENTS_FILES,
+        ...FINDER_DESKTOP_FILES,
+        ...FINDER_PROJECTS_FILES,
+      ];
+      return all;
+  }
+}
+
+function renderFinderContent() {
+  const container = document.getElementById("finder-content-el");
+  if (!container) return;
+  const files = getFinderFiles();
+  selectedFinderRow = -1;
+
+  const sectionLabel = FINDER_SIDEBAR_ITEMS.flatMap(s => s.items).find(i => i.id === currentFinderSection);
+  const title = sectionLabel ? sectionLabel.label : "Finder";
+
+  if (files.length === 0) {
+    container.innerHTML = `<div class="finder-list-header">
+      <span class="fh-name">Name</span><span class="fh-kind">Kind</span><span class="fh-date">Date Modified</span>
+    </div><div class="finder-empty">This folder is empty</div>`;
+    return;
+  }
+
+  let html = `<div class="finder-list-header">
+    <span class="fh-name">Name</span><span class="fh-kind">Kind</span><span class="fh-date">Date Modified</span>
+  </div>`;
+
+  files.forEach((f, i) => {
+    let iconHtml;
+    if (f.icon) {
+      iconHtml = `<div class="ff-icon"><img src="${f.icon}" alt="" /></div>`;
+    } else if (f.kind === "Folder") {
+      iconHtml = `<div class="ff-icon folder-icon">📁</div>`;
+    } else if (f.kind === "Text Document") {
+      iconHtml = `<div class="ff-icon folder-icon">📄</div>`;
+    } else if (f.kind === "JPEG Image") {
+      iconHtml = `<div class="ff-icon folder-icon">🖼</div>`;
+    } else {
+      iconHtml = `<div class="ff-icon folder-icon">📄</div>`;
+    }
+
+    const clickAction = f.winId
+      ? `ondblclick="openWindow('${f.winId}')"`
+      : '';
+
+    html += `<div class="finder-file-row" onclick="selectFinderRow(${i})" ${clickAction} data-row="${i}">
+      ${iconHtml}
+      <span class="ff-name">${f.name}</span>
+      <span class="ff-kind">${f.kind || ''}</span>
+      <span class="ff-date">${f.date || ''}</span>
+    </div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+function selectFinderSection(id) {
+  currentFinderSection = id;
+  renderFinderSidebar();
+  renderFinderContent();
+}
+
+function selectFinderRow(idx) {
+  selectedFinderRow = idx;
+  document.querySelectorAll("#finder-content-el .finder-file-row").forEach((row, i) => {
+    row.classList.toggle("selected", i === idx);
+  });
+}
+
+function openFinderToTrash() {
+  currentFinderSection = "trash";
+  renderFinderSidebar();
+  renderFinderContent();
+  openWindow("win-finder");
+}
+
+// Initial render
+renderFinderSidebar();
+renderFinderContent();
+
+// =====================================================================
+// CONTACTS APP
+// =====================================================================
+const CONTACTS_DATA = [
+  { id: "colo", name: "Colo", phone: "", email: "", note: "", avatar: null, convId: "colo", video: "public/background/video/call.mp4" },
+  { id: "dad", name: "Dad", phone: "", email: "", note: "el mejor papá 🫶", avatar: null, convId: "dad", video: "public/background/video/call.mp4" },
+  { id: "gato", name: "Gato", phone: "", email: "", note: "", avatar: null, convId: "gato", video: "public/background/video/call.mp4" },
+  { id: "max", name: "Max", phone: "", email: "", note: "", avatar: null, convId: "mm", video: "public/background/video/call.mp4" },
+  { id: "mayumi", name: "Mayumi", phone: "", email: "", note: "", avatar: null, convId: "mayumi", video: "public/background/video/call.mp4" },
+  { id: "mom", name: "Mom", phone: "", email: "", note: "la mejor mamá 💕", avatar: null, convId: "mom", video: "public/background/video/call.mp4" },
+  { id: "natochi", name: "Natochi", phone: "+56 9 4036 1418", email: "", note: "el novio de tonchi 🩷", avatar: "public/background/natochi/pfp.jpg", convId: "natochi", video: "public/background/video/call.mp4" },
+  { id: "vandie", name: "Vandie", phone: "", email: "", note: "", avatar: null, convId: "vandie", video: "public/background/video/call.mp4" }
+];
+
+let currentContactId = "natochi";
+
+function renderContactsSidebar() {
+  const sidebar = document.getElementById("contact-sidebar-el");
+  if (!sidebar) return;
+  // Group by first letter
+  const groups = {};
+  CONTACTS_DATA.forEach(c => {
+    const letter = c.name[0].toUpperCase();
+    if (!groups[letter]) groups[letter] = [];
+    groups[letter].push(c);
+  });
+  let html = "";
+  Object.keys(groups).sort().forEach(letter => {
+    html += `<div class="contact-letter-header">${letter}</div>`;
+    groups[letter].forEach(c => {
+      const sel = c.id === currentContactId ? " selected" : "";
+      const avatarInner = c.avatar
+        ? `<img src="${c.avatar}" alt="${c.name[0]}" />`
+        : c.name[0].toUpperCase();
+      html += `<div class="contact-sidebar-item${sel}" onclick="selectContact('${c.id}')">
+        <div class="contact-avatar-sm">${avatarInner}</div>
+        <span>${c.name}</span>
+      </div>`;
+    });
+  });
+  sidebar.innerHTML = html;
+}
+
+function renderContactDetail() {
+  const detail = document.getElementById("contact-detail-el");
+  if (!detail) return;
+  const c = CONTACTS_DATA.find(x => x.id === currentContactId);
+  if (!c) return;
+  const avatarInner = c.avatar
+    ? `<img src="${c.avatar}" alt="${c.name}" />`
+    : c.name[0].toUpperCase();
+  let infoCards = "";
+  if (c.phone) {
+    infoCards += `<div class="contact-info-card">
+      <div class="contact-info-row">
+        <div class="info-label">celular</div>
+        <div class="info-value">${c.phone}</div>
+      </div>
+    </div>`;
+  }
+  if (c.note) {
+    infoCards += `<div class="contact-info-card">
+      <div class="contact-info-row">
+        <div class="info-label">nota</div>
+        <div class="info-value" style="color:var(--text-primary);">${c.note}</div>
+      </div>
+    </div>`;
+  }
+  const posterInner = c.avatar
+    ? `<img src="${c.avatar}" alt="${c.name[0]}" />`
+    : c.name[0].toUpperCase();
+  detail.innerHTML = `
+    <div class="contact-avatar-lg">${avatarInner}</div>
+    <div class="contact-name">${c.name}</div>
+    <div class="contact-actions">
+      <div class="contact-action-btn" onclick="contactMessage('${c.id}')"><div class="ca-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#8e8e93" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>message</div>
+      <div class="contact-action-btn" onclick="contactCall('${c.id}')"><div class="ca-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#8e8e93" stroke-width="1.8"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.81.36 1.6.68 2.34a2 2 0 0 1-.45 2.11L8.09 9.42a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.74.32 1.53.55 2.34.68A2 2 0 0 1 22 16.92z"/></svg></div>call</div>
+      <div class="contact-action-btn" onclick="contactVideo('${c.id}')"><div class="ca-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#8e8e93" stroke-width="1.8"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg></div>video</div>
+      <div class="contact-action-btn" onclick="contactMail('${c.id}')"><div class="ca-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#8e8e93" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>mail</div>
+    </div>
+    <div class="contact-poster-card">
+      <div class="poster-avatar">${posterInner}</div>
+      <span class="poster-label">Foto y poster de contacto</span>
+      <span class="poster-chevron">›</span>
+    </div>
+    ${infoCards}
+  `;
+}
+
+function selectContact(id) {
+  currentContactId = id;
+  renderContactsSidebar();
+  renderContactDetail();
+}
+
+// initial render
+renderContactsSidebar();
+renderContactDetail();
+
+// Contact action: Message — open Messages with that contact's conversation
+function contactMessage(contactId) {
+  const c = CONTACTS_DATA.find(x => x.id === contactId);
+  if (!c || !c.convId) return;
+  if (!CONVERSATIONS_DATA[c.convId]) return;
+  currentConv = c.convId;
+  openWindow("win-messages");
+  // Re-render sidebar to highlight and render chat
+  renderMessages();
+}
+
+// Contact action: Call — trigger tel: link
+function contactCall(contactId) {
+  const c = CONTACTS_DATA.find(x => x.id === contactId);
+  if (!c) return;
+  if (c.phone) {
+    window.location.href = "tel:" + c.phone.replace(/\s/g, "");
+  }
+}
+
+// Contact action: Video — open FaceTime with the contact's specific video
+function contactVideo(contactId) {
+  const c = CONTACTS_DATA.find(x => x.id === contactId);
+  if (!c) return;
+  // Update FaceTime contact name
+  const nameEl = document.querySelector(".facetime-contact-name");
+  if (nameEl) nameEl.textContent = c.name;
+  // Update FaceTime video source if contact has a specific video
+  if (c.video) {
+    const vid = document.getElementById("facetime-video");
+    if (vid) {
+      const source = vid.querySelector("source");
+      if (source) source.src = c.video;
+      vid.load();
+    }
+  }
+  openWindow("win-facetime");
+}
+
+// Contact action: Mail — trigger mailto: link
+function contactMail(contactId) {
+  const c = CONTACTS_DATA.find(x => x.id === contactId);
+  if (!c) return;
+  if (c.email) {
+    window.location.href = "mailto:" + c.email;
+  } else {
+    window.location.href = "mailto:";
+  }
+}
+
+// Legacy: FaceTime call from contacts (kept for compatibility)
+function startFacetimeCall(contactName) {
+  const nameEl = document.querySelector(".facetime-contact-name");
+  if (nameEl) nameEl.textContent = contactName;
+  openWindow("win-facetime");
+}
+
+// Mute toggle for FaceTime
+let facetimeMuted = false;
+function toggleFacetimeMute() {
+  facetimeMuted = !facetimeMuted;
+  const btn = document.getElementById("ft-mute-btn");
+  if (btn) btn.classList.toggle("muted", facetimeMuted);
+}
+
+// =====================================================================
+// APPLE MENU
+// =====================================================================
+function toggleAppleMenu(e) {
+  e.stopPropagation();
+  document.getElementById("apple-menu").classList.toggle("open");
+}
+
+function closeAppleMenu() {
+  document.getElementById("apple-menu").classList.remove("open");
+}
+
+function appleMenuAction(action) {
+  closeAppleMenu();
+  if (action === "about-mac") {
+    document.getElementById("about-mac-overlay").classList.add("open");
+  } else if (action === "who-tonchi") {
+    currentNote = "who-is-tonchi";
+    openWindow("win-notes");
+    renderNotes();
+  } else if (action === "favorite-music") {
+    currentNote = "favorite-music";
+    openWindow("win-notes");
+    renderNotes();
+  } else if (action === "who-nacho") {
+    selectContact("natochi");
+    openWindow("win-contact");
+  }
+}
+
+function closeAboutMac(e) {
+  document.getElementById("about-mac-overlay").classList.remove("open");
+}
+
+// Close apple menu and emoji picker when clicking anywhere else
+document.addEventListener("click", (e) => {
+  if (!e.target.closest("#apple-menu") && !e.target.closest(".apple-logo")) {
+    closeAppleMenu();
+  }
+  if (!e.target.closest("#emoji-picker") && !e.target.closest(".emoji-btn")) {
+    closeEmojiPicker();
+  }
+});
+
+// Click desktop to deactivate windows
+document.getElementById("desktop").addEventListener("mousedown", (e) => {
+  if (!e.target.closest(".window") && !e.target.closest("#dock") && !e.target.closest("#menubar")) {
+    document.querySelectorAll(".window").forEach(w => w.classList.remove("active"));
+    document.getElementById("menubar-app-name").textContent = "Finder";
+  }
+});
+</script>
+</body>
+</html>

@@ -982,8 +982,8 @@
       </div>
       <div class="window-body facetime-body">
         <!-- Main video -->
-        <video id="facetime-video" autoplay loop playsinline>
-          <source src="public/background/video/call.mp4" type="video/mp4" />
+        <video id="facetime-video" autoplay loop muted playsinline>
+          <source src="public/background/video/natochi.mp4" type="video/mp4" />
         </video>
         <!-- Contact name overlay -->
         <div class="facetime-contact">
@@ -2066,12 +2066,17 @@ function stopFacetimeWebcam() {
 
 function playFacetimeVideo() {
   const vid = document.getElementById("facetime-video");
-  if (vid) vid.play().catch(() => {});
+  if (!vid) return;
+  // Start muted (autoplay policy), then unmute after play starts
+  vid.muted = true;
+  vid.play().then(() => {
+    vid.muted = false;
+  }).catch(() => {});
 }
 
 function pauseFacetimeVideo() {
   const vid = document.getElementById("facetime-video");
-  if (vid) vid.pause();
+  if (vid) { vid.pause(); vid.muted = true; }
 }
 
 // =====================================================================
@@ -2233,14 +2238,14 @@ renderFinderContent();
 // CONTACTS APP
 // =====================================================================
 const CONTACTS_DATA = [
-  { id: "colo", name: "Colo", phone: "", email: "", note: "", avatar: null, convId: "colo", video: "public/background/video/call.mp4" },
-  { id: "dad", name: "Dad", phone: "", email: "", note: "el mejor papá 🫶", avatar: null, convId: "dad", video: "public/background/video/call.mp4" },
-  { id: "gato", name: "Gato", phone: "", email: "", note: "", avatar: null, convId: "gato", video: "public/background/video/call.mp4" },
-  { id: "max", name: "Max", phone: "", email: "", note: "", avatar: null, convId: "mm", video: "public/background/video/call.mp4" },
-  { id: "mayumi", name: "Mayumi", phone: "", email: "", note: "", avatar: null, convId: "mayumi", video: "public/background/video/call.mp4" },
-  { id: "mom", name: "Mom", phone: "", email: "", note: "la mejor mamá 💕", avatar: null, convId: "mom", video: "public/background/video/call.mp4" },
-  { id: "natochi", name: "Natochi", phone: "+56 9 4036 1418", email: "", note: "el novio de tonchi 🩷", avatar: "public/background/natochi/pfp.jpg", convId: "natochi", video: "/Users/natochi/primer san valentin con ini/public/background/video/natochi.mp4" },
-  { id: "vandie", name: "Vandie", phone: "", email: "", note: "", avatar: null, convId: "vandie", video: "public/background/video/call.mp4" }
+  { id: "colo", name: "Colo", phone: "", email: "", note: "", avatar: null, convId: "colo", video: "public/background/video/natochi.mp4" },
+  { id: "dad", name: "Dad", phone: "", email: "", note: "el mejor papá 🫶", avatar: null, convId: "dad", video: "public/background/video/natochi.mp4" },
+  { id: "gato", name: "Gato", phone: "", email: "", note: "", avatar: null, convId: "gato", video: "public/background/video/natochi.mp4" },
+  { id: "max", name: "Max", phone: "", email: "", note: "", avatar: null, convId: "mm", video: "public/background/video/natochi.mp4" },
+  { id: "mayumi", name: "Mayumi", phone: "", email: "", note: "", avatar: null, convId: "mayumi", video: "public/background/video/natochi.mp4" },
+  { id: "mom", name: "Mom", phone: "", email: "", note: "la mejor mamá 💕", avatar: null, convId: "mom", video: "public/background/video/natochi.mp4" },
+  { id: "natochi", name: "Natochi", phone: "+56 9 4036 1418", email: "", note: "el novio de tonchi 🩷", avatar: "public/background/natochi/pfp.jpg", convId: "natochi", video: "public/background/video/natochi.mp4" },
+  { id: "vandie", name: "Vandie", phone: "", email: "", note: "", avatar: null, convId: "vandie", video: "public/background/video/natochi.mp4" }
 ];
 
 let currentContactId = "natochi";
@@ -2361,7 +2366,9 @@ function contactVideo(contactId) {
     if (vid) {
       const source = vid.querySelector("source");
       if (source) source.src = c.video;
+      vid.muted = true;
       vid.load();
+      vid.play().then(() => { vid.muted = false; }).catch(() => {});
     }
   }
   openWindow("win-facetime");

@@ -1,0 +1,5 @@
+# macOS
+.DS_Store
+
+# Videos too large for GitHub (100 MB limit) — keep .mp4 only
+public/background/video/*.mov

@@ -13,6 +13,13 @@ const PHOTOS_RAW_DATA = [
     "date": "2025-11-08T18:43:55"
   },
   {
+    "file": "01519647-41DD-4431-BBB0-1958DDDCAE47_1_105_c.jpeg",
+    "date": "2025-11-12T23:36:08",
+    "categories": [
+      "us"
+    ]
+  },
+  {
     "file": "C181D9C3-B30F-4009-ADF9-D24EF689879E_1_105_c.jpeg",
     "date": "2025-11-16T18:05:42"
   },
@@ -21,19 +28,78 @@ const PHOTOS_RAW_DATA = [
     "date": "2025-11-27T16:53:31"
   },
   {
+    "file": "1E50221A-ECE3-4AD4-A442-ADF12E003B56_1_105_c.jpeg",
+    "date": "2025-11-27T17:00:25",
+    "categories": [
+      "us"
+    ]
+  },
+  {
+    "file": "F7BA0BE7-C9FB-48E5-8F58-ACB1925D32DC_1_105_c.jpeg",
+    "date": "2025-11-29T15:09:53"
+  },
+  {
     "file": "C2FE0682-AAC1-4372-9688-D71E80328DAC_1_105_c.jpeg",
     "date": "2025-11-29T15:30:44"
+  },
+  {
+    "file": "759201F0-1849-4172-9CC8-BC50D7658B17_4_5005_c.jpeg",
+    "date": "2025-11-29T15:38:14",
+    "categories": [
+      "us"
+    ]
+  },
+  {
+    "file": "9A996D2D-99F4-45A2-ABDD-1405CFC54306_4_5005_c.jpeg",
+    "date": "2025-11-29T16:10:26",
+    "categories": [
+      "us"
+    ]
+  },
+  {
+    "file": "7FED1B99-ADA7-4463-AA21-2436FB1D73BB_1_105_c.jpeg",
+    "date": "2025-11-29T16:10:36",
+    "categories": [
+      "us"
+    ]
   },
   {
     "file": "A9AACA1D-A697-4ED0-AA0C-DE6B0FBC9A8A_1_105_c.jpeg",
     "date": "2025-11-29T16:41:05"
   },
   {
-    "file": "018B2327-F1C1-4DAD-90F3-A96D60B154DB_4_5005_c.jpeg",
-    "date": "2026-01-06T02:21:50",
+    "file": "794F0D8F-95CD-4921-903C-939CD4A3CA39_1_105_c.jpeg",
+    "date": "2025-12-13T15:07:36"
+  },
+  {
+    "file": "113FA134-E5BD-40E3-876A-290EBDB9A419_1_105_c.jpeg",
+    "date": "2025-12-14T17:28:52",
     "categories": [
-      "flowers"
+      "us"
     ]
+  },
+  {
+    "file": "27EAC3DD-3278-4AB5-BE3C-49BD684F8E9D_1_105_c.jpeg",
+    "date": "2025-12-20T13:31:22",
+    "categories": [
+      "us"
+    ]
+  },
+  {
+    "file": "7F893652-EB3E-4C45-9BFA-A7F5E26DA337_1_105_c.jpeg",
+    "date": "2025-12-30T22:34:19"
+  },
+  {
+    "file": "70D04597-F1E2-4F4C-98B7-6FD4D73277F8_1_105_c.jpeg",
+    "date": "2026-01-03T14:11:33"
+  },
+  {
+    "file": "6358A606-B26B-4EFA-A6E5-2AADA23FE6D4_1_105_c.jpeg",
+    "date": "2026-01-06T01:18:15"
+  },
+  {
+    "file": "018B2327-F1C1-4DAD-90F3-A96D60B154DB_4_5005_c.jpeg",
+    "date": "2026-01-06T02:21:50"
   },
   {
     "file": "C1E47DB4-EABB-4FF2-968B-5FA46CE3725D_1_105_c.jpeg",
@@ -41,7 +107,10 @@ const PHOTOS_RAW_DATA = [
   },
   {
     "file": "9BFA2144-37AC-4492-A4FA-5712FA0BC797_1_105_c.jpeg",
-    "date": "2026-01-08T18:40:29"
+    "date": "2026-01-08T18:40:29",
+    "categories": [
+      "us"
+    ]
   },
   {
     "file": "203DA900-E74B-4BD4-8B02-D891FA7C3F79_1_105_c.jpeg",
@@ -54,6 +123,14 @@ const PHOTOS_RAW_DATA = [
       "lat": -33.3637,
       "lon": -70.515108
     }
+  },
+  {
+    "file": "4AB8AEC6-8718-4DFC-A909-79AEBD67C60B_1_105_c.jpeg",
+    "date": "2026-02-12T14:38:31"
+  },
+  {
+    "file": "E6EB172E-93A7-4483-B590-6B6FCB1072BC_1_105_c.jpeg",
+    "date": "2026-02-12T15:20:34"
   },
   {
     "file": "1CDE8563-31F4-4AF6-A64F-4AFFD8D5BF30_1_105_c.jpeg",
@@ -69,7 +146,10 @@ const PHOTOS_RAW_DATA = [
   },
   {
     "file": "35A4D700-6FEC-4D77-87B0-9DA953E73BD0_1_105_c.jpeg",
-    "date": "2026-02-13T01:30:33.215648"
+    "date": "2026-02-13T01:30:33.215648",
+    "categories": [
+      "us"
+    ]
   },
   {
     "file": "09539457-611C-4071-AF5D-C52A7423039A_1_105_c.jpeg",
@@ -122,5 +202,69 @@ const PHOTOS_RAW_DATA = [
   {
     "file": "310BC0BB-31E8-4B5D-83B7-509A959DAD0B.jpeg",
     "date": "2026-02-13T01:36:11.955101"
+  },
+  {
+    "file": "327C7C3A-D933-4623-83EA-C62297FEC781_1_105_c.jpeg",
+    "date": "2026-02-14T11:21:20.297261",
+    "categories": [
+      "us"
+    ]
+  },
+  {
+    "file": "C5BF52F1-6BAA-432D-965B-9F750EA50EA4_1_105_c.jpeg",
+    "date": "2026-02-14T11:21:35.802216",
+    "categories": [
+      "us"
+    ]
+  },
+  {
+    "file": "CAE4CA07-E576-4A96-AAFE-F07B6181F531_1_105_c.jpeg",
+    "date": "2026-02-14T11:21:46.955165",
+    "categories": [
+      "us"
+    ]
+  },
+  {
+    "file": "5FAB0A7E-9C1F-4A8C-ADAC-3F2BA4D0206A_1_105_c.jpeg",
+    "date": "2026-02-14T11:21:47.003438",
+    "categories": [
+      "us"
+    ]
+  },
+  {
+    "file": "EC7053C5-23BC-4069-8CDF-6A9A9245D3B2_1_105_c.jpeg",
+    "date": "2026-02-14T11:24:20.205735",
+    "categories": [
+      "us"
+    ]
+  },
+  {
+    "file": "F3F3451F-2509-42CA-AB2A-57D7CC888DFA_1_105_c.jpeg",
+    "date": "2026-02-14T11:24:24.570494",
+    "categories": [
+      "us"
+    ]
+  },
+  {
+    "file": "1DFAB0C5-FDD5-43EE-8386-54DA2C7E26FF_1_105_c.jpeg",
+    "date": "2026-02-14T11:24:26.859986"
+  },
+  {
+    "file": "13025CFA-AA70-4851-956B-14D609B03894_1_105_c.jpeg",
+    "date": "2026-02-14T11:25:48.190595"
+  },
+  {
+    "file": "F15EA518-C90A-48FC-B853-E67CDC1B8C9B_1_105_c.jpeg",
+    "date": "2026-02-14T11:26:31.685096",
+    "categories": [
+      "us"
+    ]
+  },
+  {
+    "file": "14C222C2-B3A8-4FF3-8675-7BEBF3A789BD_1_105_c.jpeg",
+    "date": "2026-02-14T11:26:57.388711",
+    "categories": [
+      "us"
+    ]
   }
 ];

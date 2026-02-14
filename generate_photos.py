@@ -124,7 +124,7 @@ def load_config(all_filenames):
                          "After editing, run: source .venv/bin/activate && python3 generate_photos.py",
         "favorites": [],
         "collections": {
-            "flowers": [],
+            "us": [],
             "food": [],
             "friends": []
         },

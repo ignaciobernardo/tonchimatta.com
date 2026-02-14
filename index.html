@@ -982,8 +982,7 @@
       </div>
       <div class="window-body facetime-body">
         <!-- Main video -->
-        <video id="facetime-video" autoplay loop muted playsinline>
-          <source src="public/background/video/natochi.mp4" type="video/mp4" />
+        <video id="facetime-video" loop muted playsinline poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" style="background:#000;">
         </video>
         <!-- Contact name overlay -->
         <div class="facetime-contact">
@@ -1038,11 +1037,6 @@
         <div class="dock-icon-wrapper"><img src="public/background/icons apps/photos.png" alt="Photos" /></div>
         <div class="dot" id="dot-photos"></div>
       </div>
-      <div class="dock-item" data-app="facetime" onclick="openWindow('win-facetime')">
-        <div class="tooltip">FaceTime</div>
-        <div class="dock-icon-wrapper"><img src="public/background/icons apps/facetime.png" alt="FaceTime" /></div>
-        <div class="dot" id="dot-facetime"></div>
-      </div>
       <div class="dock-item" data-app="contact" onclick="openWindow('win-contact')">
         <div class="tooltip">Contacts</div>
         <div class="dock-icon-wrapper"><img src="public/background/icons apps/contacts.png" alt="Contacts" /></div>
@@ -1066,20 +1060,20 @@
 const NOTES_DATA = [
   {
     id: "about-me", emoji: "📌", title: "about tonchi", date: "2/13/2026",
-    preview: "Trinidad (Tonchi) Matta — espacio privado...",
+    preview: "Tonchi (ini) Matta — espacio privado...",
     section: "pinned", dateLabel: "February 13, 2026 at 8:00 AM",
     content: `<h1>📌 about tonchimatta.com</h1>
-<p>Este escritorio es el espacio privado de <strong>Trinidad (“Tonchi”) Matta</strong>.</p>
+<p>Este escritorio es el espacio privado de <strong>Tonchi (“ini”) Matta</strong>.</p>
 <p>Aquí vive su portafolio personal: notas, fotos, mensajes y pequeños easter eggs pensados solo para ella.</p>
 <h2>quién es tonchi</h2>
 <ul>
-  <li>curiosa, intensa y muy creativa</li>
-  <li>amante de los detalles y de las pequeñas sorpresas</li>
-  <li>fan de los recuerdos en fotos, las playlists largas y las conversaciones que se quedan dando vueltas en la cabeza</li>
+  <li>curiosa, dormilona y muy creativa</li>
+  <li>amante de los libros de bolsillo, el café y el apio</li>
+  <li>fan de los recuerdos en fotos, big thief y te manda canciones cuando no le alcanzan las palabras</li>
 </ul>
 <h2>sobre este espacio</h2>
 <ul>
-  <li>no es una red social ni un cv; es un escritorio íntimo</li>
+  <li>no es un cv; es un escritorio íntimo</li>
   <li>las apps (Notes, Messages, Photos, FaceTime, Contacts, Finder) cuentan distintas partes de su mundo</li>
   <li>está pensado para explorarse con calma, como si abrieras su Mac real</li>
 </ul>`
@@ -1089,7 +1083,7 @@ const NOTES_DATA = [
     preview: "lugares para encontrar a Trinidad Matta...",
     section: "pinned", dateLabel: "February 13, 2026 at 9:00 AM",
     content: `<h1>🔗 tonchi links</h1>
-<p>Algunos lugares donde vive la energía de Trinidad Matta.</p>
+<p>Algunos lugares donde vive todo el dia tonchi.</p>
 <h2>para conectar</h2>
 <ul>
   <li><a href="#">email</a> — el canal más directo</li>
@@ -1244,18 +1238,6 @@ const NOTES_DATA = [
 ];
 
 const CONVERSATIONS_DATA = {
-  mm: {
-    name: "Max Matta",
-    avatarInitials: "MM", avatarColor: "linear-gradient(135deg,#5fc3e4,#3a7bd5)",
-    listName: "Max Matta", listPreview: "dale hermano nos vemos alla", time: "Today",
-    messages: [
-      { type: "received", sender: "Max Matta", text: "ey que onda para hoy?" },
-      { type: "sent", text: "todo bien, estaba pensando en ir a comer algo" },
-      { type: "received", sender: "Max Matta", text: "dale yo me sumo" },
-      { type: "sent", text: "joya, te aviso cuando salga" },
-      { type: "received", sender: "Max Matta", text: "dale hermano nos vemos alla", status: "Read" }
-    ]
-  },
   natochi: {
     name: "Natochi",
     avatarInitials: "N", avatarColor: "linear-gradient(135deg,#fd79a8,#e84393)",
@@ -1270,65 +1252,73 @@ const CONVERSATIONS_DATA = {
       { type: "sent", text: "te quiero mucho 🩷", status: "Read" }
     ]
   },
-  mom: {
-    name: "Mom",
-    avatarInitials: "M", avatarColor: "linear-gradient(135deg,#f5af19,#f12711)",
-    listName: "Mom", listPreview: "cuidate mucho hijo 💕", time: "Yesterday",
+  mm: {
+    name: "Max",
+    avatarInitials: "M", avatarColor: "linear-gradient(135deg,#5fc3e4,#3a7bd5)",
+    listName: "Max", listPreview: "dale hermano nos vemos alla", time: "Today",
     messages: [
-      { type: "received", sender: "Mom", text: "hijo como estas?" },
-      { type: "sent", text: "bien ma, todo tranqui" },
-      { type: "received", sender: "Mom", text: "que bueno, comiste?" },
-      { type: "sent", text: "si ma jajaja" },
-      { type: "received", sender: "Mom", text: "cuidate mucho hijo 💕" },
-      { type: "sent", text: "te quiero ma ❤️", status: "Read" }
+      { type: "received", sender: "Max", text: "ey que onda para hoy?" },
+      { type: "sent", text: "todo bien, estaba pensando en ir a comer algo" },
+      { type: "received", sender: "Max", text: "dale yo me sumo" },
+      { type: "sent", text: "joya, te aviso cuando salga" },
+      { type: "received", sender: "Max", text: "dale hermano nos vemos alla", status: "Read" }
     ]
   },
-  dad: {
-    name: "Dad",
-    avatarInitials: "D", avatarColor: "linear-gradient(135deg,#11998e,#38ef7d)",
-    listName: "Dad", listPreview: "abrazo grande hijo", time: "Yesterday",
+  inaki: {
+    name: "Iñaki Bizama",
+    avatarInitials: "IB", avatarColor: "linear-gradient(135deg,#e17055,#d63031)",
+    listName: "Iñaki Bizama", listPreview: "nos vemos alla crack", time: "Today",
     messages: [
-      { type: "received", sender: "Dad", text: "como va todo?" },
-      { type: "sent", text: "todo bien pa, laburando" },
-      { type: "received", sender: "Dad", text: "bien bien, seguile metiendo" },
-      { type: "sent", text: "gracias pa" },
-      { type: "received", sender: "Dad", text: "abrazo grande hijo" },
-      { type: "sent", text: "abrazo! 🫂", status: "Read" }
+      { type: "received", sender: "Iñaki", text: "wena que hacemos" },
+      { type: "sent", text: "no se, algo piola?" },
+      { type: "received", sender: "Iñaki", text: "dale siii" },
+      { type: "sent", text: "te aviso en un rato" },
+      { type: "received", sender: "Iñaki", text: "nos vemos alla crack" }
     ]
   },
-  vandie: {
-    name: "Vandie",
-    avatarInitials: "V", avatarColor: "linear-gradient(135deg,#6c5ce7,#a29bfe)",
-    listName: "Vandie", listPreview: "jajajaja dale dale", time: "Yesterday",
+  nico: {
+    name: "Nico Schittli",
+    avatarInitials: "NS", avatarColor: "linear-gradient(135deg,#11998e,#38ef7d)",
+    listName: "Nico Schittli", listPreview: "jajaja tremendo", time: "Yesterday",
     messages: [
-      { type: "sent", text: "vandieee" },
-      { type: "received", sender: "Vandie", text: "quee jajaja" },
-      { type: "sent", text: "vamos a hacer algo este finde?" },
-      { type: "received", sender: "Vandie", text: "sii dale, que se te ocurre?" },
-      { type: "sent", text: "no se, algo tranqui" },
-      { type: "received", sender: "Vandie", text: "jajajaja dale dale" },
-      { type: "sent", text: "😂", status: "Delivered" }
+      { type: "sent", text: "nico!" },
+      { type: "received", sender: "Nico", text: "que onda hermano" },
+      { type: "sent", text: "viste lo de ayer?" },
+      { type: "received", sender: "Nico", text: "sii jajaja tremendo" }
     ]
   },
-  colo: {
-    name: "Colo",
-    avatarInitials: "C", avatarColor: "linear-gradient(135deg,#e17055,#d63031)",
-    listName: "Colo", listPreview: "jajaja que crack", time: "Tuesday",
+  andres: {
+    name: "Andrés Rodríguez",
+    avatarInitials: "AR", avatarColor: "linear-gradient(135deg,#6c5ce7,#a29bfe)",
+    listName: "Andrés Rodríguez", listPreview: "dale nos vemos!", time: "Yesterday",
     messages: [
-      { type: "sent", text: "colo!" },
-      { type: "received", sender: "Colo", text: "que onda hermano" },
-      { type: "sent", text: "todo bien vos?" },
-      { type: "received", sender: "Colo", text: "jajaja que crack" }
+      { type: "received", sender: "Andrés", text: "ey que onda" },
+      { type: "sent", text: "todo bien! vos?" },
+      { type: "received", sender: "Andrés", text: "bien bien, hagamos algo" },
+      { type: "sent", text: "dale nos vemos!" }
     ]
   },
-  gato: {
-    name: "Gato",
-    avatarInitials: "G", avatarColor: "linear-gradient(135deg,#fdcb6e,#e17055)",
-    listName: "Gato", listPreview: "nos vemos bro", time: "Monday",
+  joseytti: {
+    name: "Joseytti",
+    avatarInitials: "J", avatarColor: "linear-gradient(135deg,#f5af19,#f12711)",
+    listName: "Joseytti", listPreview: "jajajaja que bueno", time: "Yesterday",
     messages: [
-      { type: "received", sender: "Gato", text: "ey que hacemos hoy" },
-      { type: "sent", text: "nada planeado" },
-      { type: "received", sender: "Gato", text: "nos vemos bro" }
+      { type: "sent", text: "joseytti!" },
+      { type: "received", sender: "Joseytti", text: "que pasa!" },
+      { type: "sent", text: "nada jajaja que cuentas" },
+      { type: "received", sender: "Joseytti", text: "jajajaja que bueno" }
+    ]
+  },
+  joaquin: {
+    name: "Joaquín Mella",
+    avatarInitials: "JM", avatarColor: "linear-gradient(135deg,#fdcb6e,#e17055)",
+    listName: "Joaquín Mella", listPreview: "dale perfecto bro", time: "Monday",
+    messages: [
+      { type: "received", sender: "Joaquín", text: "wena como va?" },
+      { type: "sent", text: "todo bien! y tu?" },
+      { type: "received", sender: "Joaquín", text: "bien, hacemos algo?" },
+      { type: "sent", text: "sii dale" },
+      { type: "received", sender: "Joaquín", text: "dale perfecto bro" }
     ]
   },
   mayumi: {
@@ -1405,7 +1395,7 @@ function buildPhotosData() {
 let highestZ = 103;
 const windowStates = {};
 let currentNote = "about-me";
-let currentConv = "mm";
+let currentConv = "natochi";
 let currentPhotoCollection = "library";
 let currentPhotoView = "all"; // "years", "months", "all"
 let viewerPhotos = [];
@@ -2066,8 +2056,7 @@ function stopFacetimeWebcam() {
 
 function playFacetimeVideo() {
   const vid = document.getElementById("facetime-video");
-  if (!vid) return;
-  // Start muted (autoplay policy), then unmute after play starts
+  if (!vid || !vid.src || vid.src === window.location.href) return;
   vid.muted = true;
   vid.play().then(() => {
     vid.muted = false;
@@ -2238,14 +2227,14 @@ renderFinderContent();
 // CONTACTS APP
 // =====================================================================
 const CONTACTS_DATA = [
-  { id: "colo", name: "Colo", phone: "", email: "", note: "", avatar: null, convId: "colo", video: "public/background/video/natochi.mp4" },
-  { id: "dad", name: "Dad", phone: "", email: "", note: "el mejor papá 🫶", avatar: null, convId: "dad", video: "public/background/video/natochi.mp4" },
-  { id: "gato", name: "Gato", phone: "", email: "", note: "", avatar: null, convId: "gato", video: "public/background/video/natochi.mp4" },
-  { id: "max", name: "Max", phone: "", email: "", note: "", avatar: null, convId: "mm", video: "public/background/video/natochi.mp4" },
-  { id: "mayumi", name: "Mayumi", phone: "", email: "", note: "", avatar: null, convId: "mayumi", video: "public/background/video/natochi.mp4" },
-  { id: "mom", name: "Mom", phone: "", email: "", note: "la mejor mamá 💕", avatar: null, convId: "mom", video: "public/background/video/natochi.mp4" },
+  { id: "andres", name: "Andrés Rodríguez", phone: "", email: "", note: "", avatar: null, convId: "andres", video: "public/background/video/Andres.mp4" },
+  { id: "inaki", name: "Iñaki Bizama", phone: "", email: "", note: "", avatar: null, convId: "inaki", video: "public/background/video/iñaki.mp4" },
+  { id: "joaquin", name: "Joaquín Mella", phone: "", email: "", note: "", avatar: null, convId: "joaquin", video: "public/background/video/joaquin.mp4" },
+  { id: "joseytti", name: "Joseytti", phone: "", email: "", note: "", avatar: null, convId: "joseytti", video: "public/background/video/joseytti.mp4" },
+  { id: "max", name: "Max", phone: "", email: "", note: "", avatar: null, convId: "mm", video: "public/background/video/max.mp4" },
+  { id: "mayumi", name: "Mayumi", phone: "", email: "", note: "", avatar: null, convId: "mayumi", video: "public/background/video/mayumi.mp4" },
   { id: "natochi", name: "Natochi", phone: "+56 9 4036 1418", email: "", note: "el novio de tonchi 🩷", avatar: "public/background/natochi/pfp.jpg", convId: "natochi", video: "public/background/video/natochi.mp4" },
-  { id: "vandie", name: "Vandie", phone: "", email: "", note: "", avatar: null, convId: "vandie", video: "public/background/video/natochi.mp4" }
+  { id: "nico", name: "Nico Schittli", phone: "", email: "", note: "", avatar: null, convId: "nico", video: "public/background/video/nico.mp4" }
 ];
 
 let currentContactId = "natochi";
@@ -2360,12 +2349,11 @@ function contactVideo(contactId) {
   // Update FaceTime contact name
   const nameEl = document.querySelector(".facetime-contact-name");
   if (nameEl) nameEl.textContent = c.name;
-  // Update FaceTime video source if contact has a specific video
+  // Update FaceTime video source and play
   if (c.video) {
     const vid = document.getElementById("facetime-video");
     if (vid) {
-      const source = vid.querySelector("source");
-      if (source) source.src = c.video;
+      vid.src = c.video;
       vid.muted = true;
       vid.load();
       vid.play().then(() => { vid.muted = false; }).catch(() => {});

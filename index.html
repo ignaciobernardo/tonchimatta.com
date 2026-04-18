@@ -812,6 +812,29 @@
     /* Drag / Resize helpers */
     body.dragging, body.dragging * { user-select: none !important; cursor: grabbing !important; }
     body.resizing, body.resizing * { user-select: none !important; }
+
+    /* ===== QuickTime Player ===== */
+    #win-quicktime { background: #000; overflow: hidden; }
+    .quicktime-titlebar {
+      background: rgba(20, 20, 20, 0.92) !important;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex; align-items: center; position: relative;
+    }
+    .quicktime-title {
+      position: absolute; left: 0; right: 0; text-align: center;
+      font-size: 13px; color: #e5e5e7; pointer-events: none;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      padding: 0 80px;
+    }
+    .quicktime-body {
+      width: 100%; height: calc(100% - var(--titlebar-h));
+      display: flex; align-items: center; justify-content: center;
+      background: #000;
+    }
+    .quicktime-body video {
+      width: 100%; height: 100%; background: #000; object-fit: contain;
+      outline: none;
+    }
   </style>
 </head>
 <body>
@@ -1026,6 +1049,25 @@
       <div class="resize-handle-right" data-window="win-facetime"></div>
       <div class="resize-handle-bottom" data-window="win-facetime"></div>
       <div class="resize-handle-left" data-window="win-facetime"></div>
+    </div>
+
+    <!-- ===== QuickTime Player Window ===== -->
+    <div class="window" id="win-quicktime" style="top:70px;left:220px;width:720px;height:460px;z-index:103;">
+      <div class="titlebar quicktime-titlebar" data-window="win-quicktime">
+        <div class="traffic-light">
+          <button class="btn close" onclick="closeWindow('win-quicktime')"><svg viewBox="0 0 6 6"><path d="M0.5 0.5L5.5 5.5M5.5 0.5L0.5 5.5" stroke="#820005" stroke-width="1.1" stroke-linecap="round"/></svg></button>
+          <button class="btn minimize" onclick="minimizeWindow('win-quicktime')"><svg viewBox="0 0 6 6"><path d="M0.5 3h5" stroke="#9a5518" stroke-width="1.1" stroke-linecap="round"/></svg></button>
+          <button class="btn maximize" onclick="maximizeWindow('win-quicktime')"><svg viewBox="0 0 6 6"><path d="M0.5 2.5V0.5H2.5" stroke="#006500" stroke-width="1.1" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 3.5V5.5H3.5" stroke="#006500" stroke-width="1.1" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+        <div class="quicktime-title">tonchimatta video 6 meses potos.mov</div>
+      </div>
+      <div class="window-body quicktime-body">
+        <video id="quicktime-video" controls playsinline preload="metadata" src="public/background/video/tonchimatta-6meses.mp4"></video>
+      </div>
+      <div class="resize-handle" data-window="win-quicktime"></div>
+      <div class="resize-handle-right" data-window="win-quicktime"></div>
+      <div class="resize-handle-bottom" data-window="win-quicktime"></div>
+      <div class="resize-handle-left" data-window="win-quicktime"></div>
     </div>
 
     <!-- Dock -->
@@ -1904,7 +1946,7 @@ function bringToFront(id) {
   win.style.zIndex = highestZ;
   document.querySelectorAll(".window").forEach(w => w.classList.remove("active"));
   win.classList.add("active");
-  const appNames = { "win-finder": "Finder", "win-notes": "Notes", "win-photos": "Photos", "win-messages": "Messages", "win-facetime": "FaceTime", "win-contact": "Contacts" };
+  const appNames = { "win-finder": "Finder", "win-notes": "Notes", "win-photos": "Photos", "win-messages": "Messages", "win-facetime": "FaceTime", "win-contact": "Contacts", "win-quicktime": "QuickTime Player" };
   document.getElementById("menubar-app-name").textContent = appNames[id] || "Finder";
 }
 
@@ -1920,6 +1962,10 @@ function openWindow(id) {
   if (!state.open) { win.classList.add("visible"); state.open = true; updateDockDot(id, true); }
   bringToFront(id);
   if (id === "win-facetime") { startFacetimeWebcam(); playFacetimeVideo(); }
+  if (id === "win-quicktime") {
+    const qv = document.getElementById("quicktime-video");
+    if (qv) { try { qv.currentTime = 0; qv.play().catch(() => {}); } catch(e) {} }
+  }
 }
 
 function closeWindow(id) {
@@ -1934,6 +1980,10 @@ function closeWindow(id) {
   updateDockDot(id, false);
   document.getElementById("menubar-app-name").textContent = "Finder";
   if (id === "win-facetime") { stopFacetimeWebcam(); pauseFacetimeVideo(); }
+  if (id === "win-quicktime") {
+    const qv = document.getElementById("quicktime-video");
+    if (qv) { try { qv.pause(); } catch(e) {} }
+  }
 }
 
 function minimizeWindow(id) {
@@ -1948,7 +1998,7 @@ function minimizeWindow(id) {
   setTimeout(() => { win.classList.remove("visible", "minimizing"); windowStates[id].open = false; }, 400);
 }
 
-const APP_URLS = { "win-finder": "/finder", "win-notes": "/notes", "win-photos": "/photos", "win-messages": "/messages", "win-facetime": "/facetime", "win-contact": "/contacts" };
+const APP_URLS = { "win-finder": "/finder", "win-notes": "/notes", "win-photos": "/photos", "win-messages": "/messages", "win-facetime": "/facetime", "win-contact": "/contacts", "win-quicktime": "/quicktime" };
 
 function maximizeWindow(id) {
   const win = document.getElementById(id);
@@ -2081,11 +2131,13 @@ const FINDER_APPS = [
   { name: "Photos",   icon: "public/background/icons apps/photos.png",   kind: "Application", date: "Feb 8, 2026", winId: "win-photos" },
   { name: "FaceTime", icon: "public/background/icons apps/facetime.png", kind: "Application", date: "Feb 11, 2026", winId: "win-facetime" },
   { name: "Contacts", icon: "public/background/icons apps/contacts.png", kind: "Application", date: "Feb 13, 2026", winId: "win-contact" },
+  { name: "QuickTime Player", icon: "public/background/icons apps/quicktime.png", kind: "Application", date: "Apr 18, 2026", winId: "win-quicktime" },
   { name: "Finder",   icon: "public/background/icons apps/finder.png",   kind: "Application", date: "Feb 13, 2026", winId: null },
 ];
 
 const FINDER_DESKTOP_FILES = [
   { name: "background.jpg", icon: null, kind: "JPEG Image", date: "Feb 12, 2026" },
+  { name: "tonchimatta video 6 meses potos.mov", icon: null, kind: "QuickTime Movie", date: "Apr 18, 2026", winId: "win-quicktime", emoji: "🎥" },
 ];
 
 const FINDER_DOCUMENTS_FILES = [
@@ -2164,12 +2216,16 @@ function renderFinderContent() {
     let iconHtml;
     if (f.icon) {
       iconHtml = `<div class="ff-icon"><img src="${f.icon}" alt="" /></div>`;
+    } else if (f.emoji) {
+      iconHtml = `<div class="ff-icon folder-icon">${f.emoji}</div>`;
     } else if (f.kind === "Folder") {
       iconHtml = `<div class="ff-icon folder-icon">📁</div>`;
     } else if (f.kind === "Text Document") {
       iconHtml = `<div class="ff-icon folder-icon">📄</div>`;
     } else if (f.kind === "JPEG Image") {
       iconHtml = `<div class="ff-icon folder-icon">🖼</div>`;
+    } else if (f.kind === "QuickTime Movie") {
+      iconHtml = `<div class="ff-icon folder-icon">🎥</div>`;
     } else {
       iconHtml = `<div class="ff-icon folder-icon">📄</div>`;
     }

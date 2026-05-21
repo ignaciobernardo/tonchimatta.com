@@ -835,9 +835,177 @@
       width: 100%; height: 100%; background: #000; object-fit: contain;
       outline: none;
     }
+
+    /* ===== Lock Screen (macOS-style, matches page theme) ===== */
+    #lock-screen {
+      position: fixed; inset: 0; z-index: 100000;
+      background: url("public/background/background.jpg") center/cover no-repeat;
+      background-color: #2c5f8a;
+      font-family: var(--font); color: #fff;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    #lock-screen::before {
+      content: ""; position: absolute; inset: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.35) 100%);
+      backdrop-filter: saturate(180%) blur(28px);
+      -webkit-backdrop-filter: saturate(180%) blur(28px);
+    }
+    #lock-screen.unlocking {
+      opacity: 0; transform: scale(1.04);
+      transition: opacity 0.45s ease, transform 0.45s ease;
+      pointer-events: none;
+    }
+    .lock-time {
+      position: relative; font-size: 96px; font-weight: 200;
+      letter-spacing: -3px; line-height: 1; margin-top: -10vh;
+      text-shadow: 0 2px 24px rgba(0,0,0,0.35);
+    }
+    .lock-date {
+      position: relative; font-size: 19px; font-weight: 500;
+      margin-top: 8px; opacity: 0.95; letter-spacing: 0.2px;
+      text-shadow: 0 1px 12px rgba(0,0,0,0.35);
+    }
+    .lock-spacer { flex: 0 0 6vh; }
+    .lock-avatar {
+      position: relative;
+      width: 110px; height: 110px; border-radius: 50%;
+      background: linear-gradient(135deg, #ff8ab3, #d63384);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 48px; color: #fff;
+      box-shadow: 0 10px 36px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.15);
+      overflow: hidden;
+    }
+    .lock-avatar img {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+    }
+    .lock-name {
+      position: relative; font-size: 18px; font-weight: 500;
+      margin-top: 14px; letter-spacing: 0.1px;
+      text-shadow: 0 1px 10px rgba(0,0,0,0.35);
+    }
+    .lock-password-wrap {
+      position: relative; margin-top: 18px;
+      display: flex; align-items: center;
+    }
+    #lock-password {
+      width: 220px; padding: 9px 38px 9px 16px;
+      border-radius: 16px; border: none; outline: none;
+      background: rgba(255,255,255,0.18);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      color: #fff; font-size: 14px; font-family: var(--font);
+      text-align: center; letter-spacing: 3px;
+      box-shadow: inset 0 0 0 0.5px rgba(255,255,255,0.28);
+      transition: background 0.15s, box-shadow 0.15s;
+    }
+    #lock-password::placeholder {
+      color: rgba(255,255,255,0.55); letter-spacing: 0; font-weight: 400;
+    }
+    #lock-password:focus {
+      background: rgba(255,255,255,0.24);
+      box-shadow: inset 0 0 0 0.5px rgba(255,255,255,0.45);
+    }
+    .lock-submit-btn {
+      position: absolute; right: 5px; top: 50%; transform: translateY(-50%);
+      width: 26px; height: 26px; border-radius: 50%;
+      background: rgba(255,255,255,0.9); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: #1d1d1f; font-size: 15px; font-weight: 600; padding: 0 0 2px 2px;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .lock-submit-btn:hover { background: #fff; }
+    .lock-submit-btn:active { transform: translateY(-50%) scale(0.92); }
+    .lock-hint {
+      position: relative; font-size: 12px; margin-top: 18px;
+      opacity: 0.75; min-height: 16px; letter-spacing: 0.1px;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.35);
+    }
+    .lock-hint.error { color: #ffb3b3; opacity: 1; }
+    @keyframes lockShake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-9px); }
+      40%, 80% { transform: translateX(9px); }
+    }
+    .lock-password-wrap.shake { animation: lockShake 0.35s ease; }
   </style>
 </head>
 <body>
+  <!-- ===== Lock Screen (password gate) ===== -->
+  <div id="lock-screen">
+    <div class="lock-time" id="lock-time"></div>
+    <div class="lock-date" id="lock-date"></div>
+    <div class="lock-spacer"></div>
+    <div class="lock-avatar">
+      <img src="public/background/natochi/pfp.jpg" alt="tonchimatta" onerror="this.style.display='none'; this.parentNode.innerHTML='&#129392;';" />
+    </div>
+    <div class="lock-name">tonchimatta</div>
+    <form class="lock-password-wrap" id="lock-form" autocomplete="off">
+      <input type="password" id="lock-password" placeholder="Enter Password" inputmode="numeric" autocomplete="off" autofocus />
+      <button type="submit" class="lock-submit-btn" aria-label="Unlock">›</button>
+    </form>
+    <div class="lock-hint" id="lock-hint">Touch ID or enter password</div>
+  </div>
+
+  <script>
+    (function () {
+      var PASSWORD = "181025";
+      var SESSION_KEY = "tm_unlocked";
+      var lockScreen = document.getElementById("lock-screen");
+
+      // Auto-unlock if already authenticated this session
+      try {
+        if (sessionStorage.getItem(SESSION_KEY) === "1") {
+          lockScreen.parentNode.removeChild(lockScreen);
+          return;
+        }
+      } catch (e) {}
+
+      var form = document.getElementById("lock-form");
+      var input = document.getElementById("lock-password");
+      var hint = document.getElementById("lock-hint");
+      var timeEl = document.getElementById("lock-time");
+      var dateEl = document.getElementById("lock-date");
+
+      function pad(n) { return n < 10 ? "0" + n : "" + n; }
+      function updateClock() {
+        var now = new Date();
+        timeEl.textContent = pad(now.getHours()) + ":" + pad(now.getMinutes());
+        var days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+        var months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+        dateEl.textContent = days[now.getDay()] + ", " + months[now.getMonth()] + " " + now.getDate();
+      }
+      updateClock();
+      setInterval(updateClock, 1000);
+
+      function unlock() {
+        try { sessionStorage.setItem(SESSION_KEY, "1"); } catch (e) {}
+        lockScreen.classList.add("unlocking");
+        setTimeout(function () {
+          if (lockScreen.parentNode) lockScreen.parentNode.removeChild(lockScreen);
+        }, 480);
+      }
+
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        if (input.value === PASSWORD) {
+          hint.textContent = "Unlocking...";
+          hint.classList.remove("error");
+          unlock();
+        } else {
+          hint.textContent = "Incorrect password. Try again.";
+          hint.classList.add("error");
+          form.classList.remove("shake");
+          void form.offsetWidth;
+          form.classList.add("shake");
+          input.value = "";
+          input.focus();
+        }
+      });
+
+      setTimeout(function () { input.focus(); }, 50);
+    })();
+  </script>
+
   <div id="desktop">
     <!-- Menu Bar -->
     <div id="menubar">

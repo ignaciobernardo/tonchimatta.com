@@ -1,0 +1,405 @@
+/* ---------------------------------------------------------------
+   Tipografías
+   Exposure Trial: dejá los archivos en fonts/ con estos nombres.
+   Mientras no estén, cae al fallback serif sin romper nada.
+----------------------------------------------------------------*/
+@font-face {
+  font-family: "Exposure Trial";
+  src: url("fonts/ExposureTrial-Regular.woff2") format("woff2"),
+       url("fonts/ExposureTrial-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Exposure Trial";
+  src: url("fonts/ExposureTrial-Italic.woff2") format("woff2"),
+       url("fonts/ExposureTrial-Italic.otf") format("opentype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+:root {
+  --off-white: #F7F5F0;
+  --grid-line: rgba(46, 63, 127, 0.13);
+  --grid-line-strong: rgba(46, 63, 127, 0.22);
+  --grid-size: 28px;
+  --ink: #1A1E2E;
+  --blue: #2E3F7F;
+  --edge-width: 96px;   /* 4 columnas de dígitos */
+
+  --display: "Exposure Trial", Georgia, "Times New Roman", serif;
+  --body: "Inter", Helvetica, "Helvetica Neue", Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 17px;
+  line-height: 1.65;
+  background-color: var(--off-white);
+  background-image:
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to right, var(--grid-line-strong) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line-strong) 1px, transparent 1px);
+  background-size:
+    var(--grid-size) var(--grid-size),
+    var(--grid-size) var(--grid-size),
+    calc(var(--grid-size) * 5) calc(var(--grid-size) * 5),
+    calc(var(--grid-size) * 5) calc(var(--grid-size) * 5);
+  background-position: 0 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------------------------------------------------------------
+   Layout
+----------------------------------------------------------------*/
+.page {
+  max-width: 680px;
+  margin: 0 auto;
+  padding-block: clamp(48px, 10vh, 110px) 64px;
+  padding-inline: calc(var(--edge-width) + 24px);
+}
+
+.page-title {
+  margin: 0 0 clamp(28px, 6vw, 56px);
+}
+
+h1, h2, h3,
+.display {
+  font-family: var(--display);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+
+h1 {
+  font-size: clamp(34px, 6.4vw, 58px);
+  margin: 0;
+  text-wrap: balance;
+}
+
+h2 { font-size: clamp(24px, 4vw, 32px); margin: 2em 0 0.5em; }
+
+/* Subtítulos y bajadas en itálica */
+.subtitle {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: clamp(20px, 3.4vw, 26px);
+  line-height: 1.35;
+  color: var(--blue);
+  margin: 0 0 1.6em;
+}
+
+.prose p {
+  margin: 0 0 1.5em;
+  text-align: justify;
+  text-justify: inter-word;
+  hyphens: auto;
+}
+
+.prose ul {
+  list-style: none;
+  margin: 0 0 1.8em;
+  padding: 0;
+}
+
+.prose li {
+  position: relative;
+  padding-left: 20px;
+  margin-bottom: 1em;
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+.prose li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.65em;
+  width: 7px;
+  height: 7px;
+  background: var(--blue);
+}
+
+.term {
+  font-family: var(--display);
+  font-size: 1.06em;
+}
+
+.arrow {
+  color: var(--blue);
+  padding: 0 0.15em;
+}
+
+a {
+  color: var(--blue);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(46, 63, 127, 0.4);
+  transition: background-color 140ms ease, border-color 140ms ease;
+}
+
+a:hover {
+  background-color: rgba(46, 63, 127, 0.10);
+  border-bottom-color: var(--blue);
+}
+
+/* Botones (cuando hagan falta) */
+.button {
+  display: inline-block;
+  font-family: var(--display);
+  font-size: 17px;
+  line-height: 1;
+  color: var(--off-white);
+  background: var(--blue);
+  border: 1px solid var(--blue);
+  padding: 14px 22px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 140ms ease, color 140ms ease;
+}
+
+.button:hover {
+  background: transparent;
+  color: var(--blue);
+}
+
+.button--ghost {
+  background: transparent;
+  color: var(--blue);
+}
+
+.button--ghost:hover {
+  background: var(--blue);
+  color: var(--off-white);
+}
+
+.site-footer {
+  margin-top: clamp(56px, 12vh, 110px);
+  padding-top: 22px;
+  border-top: 1px solid rgba(46, 63, 127, 0.22);
+}
+
+.site-footer p {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 16px;
+  color: var(--blue);
+  margin: 0;
+}
+
+/* ---------------------------------------------------------------
+   Bordes ASCII
+----------------------------------------------------------------*/
+.edge {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  width: var(--edge-width);
+  z-index: 5;
+  overflow: visible;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  /* Deja pasar el scroll vertical con el dedo; los dígitos igual
+     reaccionan (repelencia, disparo, arrastre) vía JS. */
+  touch-action: pan-y;
+}
+
+#edge-left  { left: 0; }
+#edge-right { right: 0; }
+
+.edge .bit {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--edge-width);
+  text-align: center;
+  font-family: "Inter", Helvetica, Arial, sans-serif;
+  font-feature-settings: "tnum" 1, "zero" 1;
+  font-variant-numeric: tabular-nums slashed-zero;
+  font-size: 15px;
+  line-height: 22px;
+  height: 22px;
+  color: #2E3F7F;
+  will-change: transform;
+  pointer-events: auto;
+  cursor: grab;
+}
+
+.edge .bit.dragging {
+  cursor: grabbing;
+}
+
+@media (max-width: 640px) {
+  :root { --edge-width: 64px; }   /* 4 columnas, más angostas */
+  body { font-size: 16px; }
+  .edge .bit { font-size: 13px; }
+  .page { padding-inline: calc(var(--edge-width) + 14px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .edge .bit { transition: none; }
+}
+
+/* ---------------------------------------------------------------
+   Cajón de carpetas
+   Cada carpeta muestra solo la pregunta (Exposure). La respuesta
+   (Inter, con sus links) está oculta y se revela al tocar la
+   carpeta (queda abierta) o mientras se la arrastra para reordenar.
+----------------------------------------------------------------*/
+.folders {
+  margin-top: clamp(56px, 10vh, 96px);
+}
+
+.folders__caption {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 16px;
+  color: var(--blue);
+  margin: 0 0 18px;
+}
+
+.folders__stack {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0 28px;
+}
+
+.folder-tab {
+  position: relative;
+  display: block;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  border: none;
+  border-radius: 16px 16px 5px 5px;
+  background: var(--tab-color);
+  color: var(--tab-ink, #2B2013);
+  padding: 22px 26px 26px;
+  margin-top: -16px;
+  z-index: var(--z);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  box-shadow:
+    0 -1px 0 rgba(0, 0, 0, 0.06) inset,
+    0 10px 18px -12px rgba(26, 30, 46, 0.35);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.folder-tab:first-child {
+  margin-top: 0;
+}
+
+.folder-tab:hover,
+.folder-tab--open {
+  transform: translateY(-6px) rotate(-0.3deg);
+  box-shadow:
+    0 -1px 0 rgba(0, 0, 0, 0.06) inset,
+    0 18px 26px -14px rgba(26, 30, 46, 0.4);
+}
+
+.folder-tab:active {
+  cursor: grabbing;
+}
+
+.folder-tab:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 3px;
+  z-index: 20;
+}
+
+/* Mientras se está reordenando con el dedo o el mouse */
+.folder-tab--dragging {
+  cursor: grabbing;
+  transition: none;
+  box-shadow:
+    0 -1px 0 rgba(0, 0, 0, 0.08) inset,
+    0 22px 32px -12px rgba(26, 30, 46, 0.45);
+}
+
+.folder-tab__label {
+  display: block;
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(15px, 2.1vw, 18px);
+  line-height: 1.35;
+  max-width: 46ch;
+}
+
+/* Respuesta, en Inter, debajo de la pregunta.
+   Arranca colapsada (alto 0) — el alto real al abrirla lo calcula
+   folders.js y lo pone inline, así la transición es pareja sin
+   importar cuánto texto tenga cada una. */
+.folder-tab__answer {
+  display: block;
+  font-family: var(--body);
+  font-size: clamp(14px, 1.7vw, 16px);
+  line-height: 1.55;
+  max-width: 52ch;
+  max-height: 0;
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 1px solid transparent;
+  overflow: hidden;
+  opacity: 0;
+  transition:
+    max-height 300ms ease,
+    opacity 200ms ease,
+    margin-top 300ms ease,
+    padding-top 300ms ease,
+    border-color 300ms ease;
+}
+
+.folder-tab--open .folder-tab__answer,
+.folder-tab--dragging .folder-tab__answer {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top-color: rgba(0, 0, 0, 0.12);
+  opacity: 1;
+}
+
+.folder-tab__answer p {
+  margin: 0 0 0.6em;
+}
+
+.folder-tab__answer p:last-child {
+  margin-bottom: 0;
+}
+
+.folder-tab__answer a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: currentColor;
+  text-underline-offset: 2px;
+  opacity: 0.92;
+  cursor: pointer;
+}
+
+.folder-tab__answer a:hover {
+  opacity: 1;
+}
+
+@media (max-width: 640px) {
+  .folder-tab {
+    padding: 18px 20px 22px;
+    margin-top: -12px;
+    border-radius: 13px 13px 4px 4px;
+  }
+  .folder-tab__label,
+  .folder-tab__answer {
+    max-width: none;
+  }
+}
